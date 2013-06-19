@@ -22,8 +22,10 @@ c_vdw_abs = 2.2328
 c_ql_abs = 2.0*c_1_abs + 2.0*c_2_abs
 c_hex_abs = 3.0*(c_ql_abs + c_vdw_abs)
 c_tot_abs = N3QL*c_hex_abs + c_vac_abs
+
 # c axis length in units relative to a_hex_abs
 c_tot = c_tot_abs / a_hex_abs
+
 # c axis lattice parameters in units relative to c_tot_abs
 c_1 = c_1_abs / c_tot_abs
 c_2 = c_2_abs / c_tot_abs
@@ -33,7 +35,7 @@ c_hex = c_hex_abs / c_tot_abs
 
 f = open('POSCAR', 'w')
 try:
-    header = "Bi2Se3: " + str(N3QL) + " 3xQL\n"
+    header = "Bi2Se3: " + str(N3QL) + "x15 layers; vacuum " + str(c_vac_abs) + " Angstroms\n"
     f.write(header)
     f.write(str(a_hex_abs) + "\n")          # lattice parameter (scale)
     f.write("1.0 0.0 0.0\n")            # a_1
