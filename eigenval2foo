@@ -31,13 +31,19 @@ def status(str):
 # ====================================================================== #
 ## EIGENVAL files have the following headers, which I only partially
 ## understand.
-##  {?}  {?}  {?}  {num_spins:=(1|2)}
+## UPDATED descriptions pulled from thread at:
+## http://cms.mpi.univie.ac.at/vasp-forum/forum_viewtopic.php?4.7 ; post on Tue Oct 24 2006, 01:23PM
+## ORIGINAL description: {?}  {?}  {?}  {num_spins:=(1|2)}
+## UPDATED description: {number of atoms} {number of atoms (again)} {NBLOCK*KBLOCK} {1 = non-spin-polarized; 2 = spin-polarized}
 #    2    2    1   1
+## UPDATED description: {cell volume} {lattice vector a in m} {lattice vector b in m} {lattice vector c in m} {POTIM * 1e-15}
 #  0.8323070E+01  0.2866000E-09  0.2866000E-09  0.2866000E-09  0.5000000E-15
-#   1.00000000000000D-004
-#  CAR 
-# MgO                                     
-##  {?}  {num_k}  {num_bands}
+## UPDATED description: {temperature} <-- TODO check this, EDIFF seems more likely
+#   1.00000000000000E-004
+#  CAR
+# MgO 
+##  ORIGINAL description: {?}  {num_k}  {num_bands}
+##  UPDATED description: {number of electrons} {number of k points} {number of bands}
 #    8   20    8
 
 ## Each k-point record looks like this:
@@ -89,9 +95,9 @@ class EIGENVAL:
 			# 1 blank line.
 			# 1 k-point line.
 			# num_bands band lines.
-			o = 6 + k * k_record_size
+			o = 6 + k * k_record_size # o = line number for start of current k-record
 
-			a = map(float, lines[o + 1].split())
+			a = map(float, lines[o + 1].split()) # o+1 --> k-point line (skip blank line)
 
 			self.kpoints.append(tuple(a[:3]))
 			self.weights.append(a[3])
@@ -114,9 +120,9 @@ class EIGENVAL:
 	def projectKpoints(self):
 		l = []
 		for (a, b, c) in self.kpoints:
-			l.append(math.sqrt(a**2 + b**2 + c**2))
+            # k = (kx, ky, kz) --> |k|
+			l.append(math.sqrt(a**2 + b**2 + c**2)) 
 		return l
-
 
 	def __str__(self):
 		info = {
@@ -319,12 +325,22 @@ def main():
 	X = map(lambda x, s=step: x * s, range(N))
 
 	# A is a list of curves, which are lists of points.
+    # ---> A follows the order of points in KPOINTS/EIGENVAL
 	# X is a list of points for the X axis.
 	# N = len(X) = len(A[i]), for all i
 	# M = len(A)
 
 	# Handle formats.
 	if format == "gnuplot":
+        # to clarify the zip operation:
+        # >>> X = [0, 1, 2]
+        # >>> [X]
+        # [[0, 1, 2]]
+        # >>> A = [[3, 4, 5], [6, 7, 8], [9, 10, 12]]
+        # >>> apply(zip, [X] + A)
+        # [(0, 3, 6, 9), (1, 4, 7, 10), (2, 5, 8, 12)]
+        # >>> [X] + A
+        # [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, 10, 12]]
 		B = apply(zip, [X] + A)
 
 		dat_path = out_name + '.dat'
