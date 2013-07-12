@@ -11,9 +11,23 @@ def parseArgs():
 
 # Parse kpoints file
 def getKpoints(kpointsFileName):
-    #TODO open file or error
-    kpoints = []
     #TODO read file (append to kpoints) or error
+    #kpointsFile = open(kpointsFileName, 'r')
+    kNum = 25
+    kBounds = [[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]], [[0.5, 0.5, 0.5], [0.0, 0.5, 0.5]]]
+    kpoints = []
+    # iterate over (kStart, kStop) pairs
+    for pair in kBounds:
+        start, stop, step = pair[0], pair[1], []
+        # possibly different step for each coordinate
+        for i in range(len(start)):
+            step.append((stop[i] - start[i])/(kNum-1))
+        # make kNum points between start and stop, including boundaries
+        for ptIndex in range(kNum):
+            point = []
+            for i in range(len(start)):
+                point.append(start[i] + ptIndex*step[i])
+            kpoints.append(point)
     return kpoints
 
 # Return a Hamiltonian function (k -> H_k) of the type specified
