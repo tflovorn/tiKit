@@ -25,6 +25,12 @@ Gamma5 = np.array([[1, 0, 0, 0],
                    [0, 0, 1, 0],
                    [0, 0, 0, -1]])
 
+# Construct a Hermitian matrix contaning the upper triangular part given
+# by M. The diagonal elements of M must be real and the elements below
+# the diagonal must contain all zeros.
+def makeHermitian(M):
+    return M + M.T.conj() - np.diag(M.diagonal())
+
 # Parse command-line arguments calcType, kpointsFileName, outFileName
 def parseArgs():
     if len(sys.argv) != 4:
@@ -81,10 +87,17 @@ def HamiltonianFn(calcType):
 # This Hamiltonian is from Liu et al PRB 82, 045122 (2010).
 # Complex numbers in p are encoded as "varName" + ("re" or "im").
 def Hamiltonian_8band(p):
-    #TODO
-    print("Warning: 8band Hamiltonian is unimplemented")
+    f = lambda k, F, K: F * k[2]**2 + K * (k[0]**2 + k[1]**2)
+    g = lambda k, U, V: U * k[2] * (k[0] + 1j*k[1]) + V * (k[0] - 1j*k[1])**2
     def H(k):
-        return np.array([[1, 0], [0, -1]])
+        #TODO units? (hbar^2/(2m) factor; 2/hbar factors)
+        diagonal = [f(k, p["F1"], p["K1"]), f(k, p["F1"], p["K1"]),
+                    f(k, p["F3"], p["K3"]), f(k, p["F3"], p["K3"]),
+                    f(k, p["F5"], p["K5"]), f(k, p["F5"], p["K5"]),
+                    f(k, p["F7"], p["K7"]), f(k, p["F7"], p["K7"])]
+        top = np.empty([8, 8]) #TODO
+        return makeHermitian(top + np.diag(diagonal))
+
     return H
 
 # Generate 4-band Hamiltonian function with properties given by p.
@@ -134,10 +147,10 @@ def main():
     H = HamiltonianFn(calcType)
 
     with open(outFileName, 'w') as outFile:
-        # iterate over kpoints (parallelize later)
+        # iterate over kpoints (parallelize later if necessary)
         for k in kpoints:
             Hk = H(k)
-            eigenvals, eigenkets = linalg.eig(Hk)
+            eigenvals, eigenkets = linalg.eigh(Hk)
             writeOutput(k, eigenvals, eigenkets, outFile)
 
 if __name__ == "__main__":
