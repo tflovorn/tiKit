@@ -47,13 +47,8 @@ def HamiltonianFn(calcType):
     # valid calcTypes: "8band", "4band", "mnk12"
     # TODO implement (8band first)
     def H(k):
-        return 0.0
+        return np.array([[1, 0], [0, -1]])
     return H
-
-# Return the eigenvalues and corresponding eigenvectors of M
-def EigenDecompose(M):
-    #TODO
-    return [], []
 
 # Write the output for one kpoint
 def writeOutput(k, eigenvals, eigenkets, outFile):
@@ -71,7 +66,7 @@ def main():
         # iterate over kpoints (parallelize later)
         for k in kpoints:
             Hk = H(k)
-            eigenvals, eigenkets = EigenDecompose(Hk)
+            eigenvals, eigenkets = linalg.eig(Hk)
             writeOutput(k, eigenvals, eigenkets, outFile)
 
 if __name__ == "__main__":
