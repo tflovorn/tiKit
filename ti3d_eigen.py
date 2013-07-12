@@ -5,7 +5,8 @@ from scipy import linalg
 # Parse command-line arguments calcType, kpointsFileName, outFileName
 def parseArgs():
     if len(sys.argv) != 4:
-        print("Usage: ti3D_eigen [8band|4band|mnk12] kpointsFileName outFileName")
+        print("Usage: ti3D_eigen calcType kpointsFileName outFileName")
+        print("calcType should be 8band, 4band, or mnk12")
         sys.exit(2)
     return sys.argv[1], sys.argv[2], sys.argv[3]
 
@@ -44,8 +45,28 @@ def getKpoints(kpointsFileName):
 
 # Return a Hamiltonian function (k -> H_k) of the type specified
 def HamiltonianFn(calcType):
-    # valid calcTypes: "8band", "4band", "mnk12"
-    # TODO implement (8band first)
+    if calcType == "8band":
+        return Hamiltonian_8band()
+    elif calcType == "4band":
+        return Hamiltonian_4band()
+    elif calcType == "mnk12":
+        return Hamiltonian_mnk12()
+    else:
+        print("Usage: ti3D_eigen calcType kpointsFileName outFileName")
+        print("calcType should be 8band, 4band, or mnk12")
+        sys.exit(2)
+
+def Hamiltonian_8band():
+    def H(k):
+        return np.array([[1, 0], [0, -1]])
+    return H
+
+def Hamiltonian_4band():
+    def H(k):
+        return np.array([[1, 0], [0, -1]])
+    return H
+
+def Hamiltonian_mnk12():
     def H(k):
         return np.array([[1, 0], [0, -1]])
     return H
