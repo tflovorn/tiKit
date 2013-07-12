@@ -77,16 +77,36 @@ def HamiltonianFn(calcType):
         props = json.load(propsFile)
         return fns[calcType](props)
 
-# Generate 8-band Hamiltonian function with properties given by p
+# Generate 8-band Hamiltonian function with properties given by p.
+# This Hamiltonian is from Liu et al PRB 82, 045122 (2010).
+# Complex numbers in p are encoded as "varName" + ("re" or "im").
 def Hamiltonian_8band(p):
+    #TODO
+    print("Warning: 8band Hamiltonian is unimplemented")
     def H(k):
         return np.array([[1, 0], [0, -1]])
     return H
 
-# Generate 4-band Hamiltonian function with properties given by p
+# Generate 4-band Hamiltonian function with properties given by p.
+# This Hamiltonian is also from Liu 2010.
 def Hamiltonian_4band(p):
+    # (k_parallel)^2
+    kp2 = lambda k: k[0]**2 + k[1]**2
+    # k_z^2
+    kz2 = lambda k: k[2]**2
+    # functions in H0, Eq. 16, Liu 2010
+    epsilon = lambda k: p["C0"] + p["C1"]*kz2(k) + p["C2"]*kp2(k)
+    M = lambda k: p["M0"] + p["M1"]*kz2(k) + p["M2"]*kp2(k)
+    A = lambda k: p["A0"] - 0.5*p["A0"]*kp2(k) #TODO check guesses A2 = (-1/2) A0 and B2 = (-1/2) B0
+    B = lambda k: p["B0"] - 0.5*p["B0"]*kz2(k)
+    # parenthetic expression in H3, Eq. 17, Liu 2010
+    q = lambda kx, ky: kx**3 - 3.0*kx*(ky**2)
+
     def H(k):
-        return np.array([[1, 0], [0, -1]])
+        H0 = epsilon(k) + M(k)*Gamma5 + B(k)*Gamma4*k[2] + A(k)*(Gamma1*k[1] - Gamma2*k[0])
+        H3 = p["R1"]*Gamma3*q(k[0], k[1]) - p["R2"]*Gamma4*q(k[1], k[0])
+        return H0 + H3
+
     return H
 
 # Generate mnk12 Hamiltonian function with properties given by p
@@ -100,6 +120,9 @@ def Hamiltonian_mnk12(p):
 # Write the output for one kpoint
 def writeOutput(k, eigenvals, eigenkets, outFile):
     #TODO
+    print(k)
+    print(eigenvals)
+    print(eigenkets)
     return None
 
 def main():

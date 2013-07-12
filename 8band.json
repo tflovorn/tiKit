@@ -1,16 +1,10 @@
-// Bi2Se3 parameters from Liu et al PRB 82, 045122 (2010).
-//
-// Complex numbers are encoded as "varName" + ("re" or "im") if imaginary
-// part is finite.
 {
-    // ev A
     "P1": 3.33,
     "Q1": 2.26,
     "P2": 2.84,
     "Q2": 2.84,
     "P3": -2.62,
     "Q3": 2.48,
-    // ev A^2
     "F1": 3.73,
     "K1": 6.52,
     "F3": -1.12,
@@ -37,7 +31,7 @@
 
     "V58re": -0.64,
     "V58im": -4.29,
-    // eV
+
     "E1": -0.29,
     "E3": 0.28,
     "E5": -0.57,
