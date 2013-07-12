@@ -51,7 +51,7 @@ def HamiltonianFn(calcType):
         print("Usage: ti3D_eigen calcType kpointsFileName outFileName")
         print("calcType should be 8band, 4band, or mnk12")
         sys.exit(2)
-    with open(calcType, 'r') as propsFile:
+    with open(calcType + ".json", 'r') as propsFile:
         props = json.load(propsFile)
         return fns[calcType](props)
 
