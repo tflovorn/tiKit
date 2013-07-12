@@ -3,6 +3,28 @@ import json
 import numpy as np
 from scipy import linalg
 
+# 3D model notation for Gamma matrices
+Gamma1 = np.array([[0, 0, 0, 1],
+                   [0, 0, 1, 0],
+                   [0, 1, 0, 0],
+                   [1, 0, 0, 0]])
+Gamma2 = np.array([[0, 0, 0, -1j],
+                   [0, 0, 1j, 0],
+                   [0, -1j, 0, 0],
+                   [1j, 0, 0, 0]])
+Gamma3 = np.array([[0, 1, 0, 0],
+                   [1, 0, 0, 0],
+                   [0, 0, 0, -1],
+                   [0, 0, -1, 0]])
+Gamma4 = np.array([[0, -1j, 0, 0],
+                   [1j, 0, 0, 0],
+                   [0, 0, 0, -1j],
+                   [0, 0, 1j, 0]])
+Gamma5 = np.array([[1, 0, 0, 0],
+                   [0, -1, 0, 0],
+                   [0, 0, 1, 0],
+                   [0, 0, 0, -1]])
+
 # Parse command-line arguments calcType, kpointsFileName, outFileName
 def parseArgs():
     if len(sys.argv) != 4:
@@ -69,12 +91,15 @@ def Hamiltonian_4band(p):
 
 # Generate mnk12 Hamiltonian function with properties given by p
 def Hamiltonian_mnk12(p):
+    #TODO
+    print("Warning: mnk12 Hamiltonian is unimplemented")
     def H(k):
         return np.array([[1, 0], [0, -1]])
     return H
 
 # Write the output for one kpoint
 def writeOutput(k, eigenvals, eigenkets, outFile):
+    #TODO
     return None
 
 def main():
