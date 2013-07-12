@@ -11,10 +11,22 @@ def parseArgs():
 
 # Parse kpoints file
 def getKpoints(kpointsFileName):
-    #TODO read file (append to kpoints) or error
-    #kpointsFile = open(kpointsFileName, 'r')
-    kNum = 25
-    kBounds = [[[0.0, 0.0, 0.0], [0.5, 0.5, 0.5]], [[0.5, 0.5, 0.5], [0.0, 0.5, 0.5]]]
+    # KPOINTS format: ignore lines 0, 2, 3; line 1 = # of points in each range;
+    # line 4-5: range 1; line 7-8: range 2; ...
+    kpointsFile = open(kpointsFileName, 'r')
+    lines = kpointsFile.readlines()
+    kpointsFile.close()
+
+    kNum = int(lines[1])
+    lineNum = 4
+    kBounds = []
+    while lineNum < len(lines):
+        # take lineNum and lineNum+1 and convert each to a list of floats
+        start = map(float, lines[lineNum].split(" "))
+        stop = map(float, lines[lineNum+1].split(" "))
+        kBounds.append([start, stop])
+        lineNum += 3
+
     kpoints = []
     # iterate over (kStart, kStop) pairs
     for pair in kBounds:
