@@ -1,4 +1,5 @@
 import sys
+import json
 import numpy as np
 from scipy import linalg
 
@@ -45,28 +46,29 @@ def getKpoints(kpointsFileName):
 
 # Return a Hamiltonian function (k -> H_k) of the type specified
 def HamiltonianFn(calcType):
-    if calcType == "8band":
-        return Hamiltonian_8band()
-    elif calcType == "4band":
-        return Hamiltonian_4band()
-    elif calcType == "mnk12":
-        return Hamiltonian_mnk12()
-    else:
+    fns = {"8band": Hamiltonian_8band, "4band": Hamiltonian_4band, "mnk12": Hamiltonian_mnk12}
+    if calcType not in fns:
         print("Usage: ti3D_eigen calcType kpointsFileName outFileName")
         print("calcType should be 8band, 4band, or mnk12")
         sys.exit(2)
+    with open(calcType, 'r') as propsFile:
+        props = json.load(propsFile)
+        return fns[calcType](props)
 
-def Hamiltonian_8band():
+# Generate 8-band Hamiltonian function with properties given by p
+def Hamiltonian_8band(p):
     def H(k):
         return np.array([[1, 0], [0, -1]])
     return H
 
-def Hamiltonian_4band():
+# Generate 4-band Hamiltonian function with properties given by p
+def Hamiltonian_4band(p):
     def H(k):
         return np.array([[1, 0], [0, -1]])
     return H
 
-def Hamiltonian_mnk12():
+# Generate mnk12 Hamiltonian function with properties given by p
+def Hamiltonian_mnk12(p):
     def H(k):
         return np.array([[1, 0], [0, -1]])
     return H
