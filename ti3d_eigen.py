@@ -183,9 +183,9 @@ def Hamiltonian_mnk12(p):
 # Write the output for one kpoint
 def writeOutput(k, eigenvals, eigenkets, outFile):
     #TODO
-    print(k)
-    print(eigenvals)
-    print(eigenkets)
+    outFile.write(str(k) + "\n")
+    outFile.write(str(eigenvals) + "\n")
+    outFile.write(str(eigenkets) + "\n")
     return None
 
 def main():
