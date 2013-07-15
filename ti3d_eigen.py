@@ -1,5 +1,4 @@
-import sys
-import json
+import sys, json, math
 import numpy as np
 from scipy import linalg
 
@@ -43,8 +42,7 @@ def parseArgs():
 def getKpoints(kpointsFileName):
     # KPOINTS format: ignore lines 0, 2, 3; line 1 = # of points in each range;
     # line 4-5: range 1; line 7-8: range 2; ...
-    # TODO: convert to correct units (1/A).
-    # KPOINTS values are in (2pi/a) units. (a/b/c?)
+    # k values returned are in 2pi/(lattice constant) units.
     kpointsFile = open(kpointsFileName, 'r')
     lines = kpointsFile.readlines()
     kpointsFile.close()
@@ -91,6 +89,8 @@ def Hamiltonian_8band(p):
     g = lambda k, U, V: U * k[2] * k_plus(k) + V * k_minus(k)**2
 
     def H(k):
+        # TODO multiply k by lattice constant in each direction
+
         # Assume factors of (hbar)^2/(2m) and 2/hbar are absorbed into
         # constants. TODO: check that this is correct.
         diagonal = [f(k, p["F1"], p["K1"]), f(k, p["F1"], p["K1"]),
@@ -143,6 +143,8 @@ def Hamiltonian_4band(p):
     q = lambda kx, ky: kx**3 - 3.0*kx*(ky**2)
 
     def H(k):
+        # TODO multiply k by lattice constant in each direction
+
         H0 = epsilon(k) + M(k)*Gamma5 + B(k)*Gamma4*k[2] + A(k)*(Gamma1*k[1] - Gamma2*k[0])
         H3 = p["R1"]*Gamma3*q(k[0], k[1]) - p["R2"]*Gamma4*q(k[1], k[0])
         return H0 + H3
@@ -151,10 +153,19 @@ def Hamiltonian_4band(p):
 
 # Generate mnk12 Hamiltonian function with properties given by p
 def Hamiltonian_mnk12(p):
-    #TODO
-    print("Warning: mnk12 Hamiltonian is unimplemented")
+    d = lambda k: p["M"] - 2.0*p["B"] + 2.0*p["B"] * (math.cos(k[0])
+            + math.cos(k[1]) - 2.0)
     def H(k):
-        return np.array([[1, 0], [0, -1]])
+        # Convert k from 2pi/(lattice vector) units to 1/(lattice vector).
+        # Lattice vector factor eliminated in sin(kx * a), etc.
+        k = 2.0 * math.pi * k
+
+        diagonal = np.diag([p["C"]]*4)
+        sin_part = p["A"]*(Gamma2 * math.sin(k[0]) + Gamma1 * math.sin(k[1])
+                           + Gamma4 * math.sin(k[2]))
+        cos_part = Gamma5 * (2.0*p["B"] * math.cos(k[2]) + d(k))
+        return diagonal + sin_part + cos_part
+
     return H
 
 # Write the output for one kpoint
