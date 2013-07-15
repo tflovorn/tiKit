@@ -43,6 +43,8 @@ def parseArgs():
 def getKpoints(kpointsFileName):
     # KPOINTS format: ignore lines 0, 2, 3; line 1 = # of points in each range;
     # line 4-5: range 1; line 7-8: range 2; ...
+    # TODO: convert to correct units (1/A).
+    # KPOINTS values are in (2pi/a) units. (a/b/c?)
     kpointsFile = open(kpointsFileName, 'r')
     lines = kpointsFile.readlines()
     kpointsFile.close()
@@ -58,17 +60,13 @@ def getKpoints(kpointsFileName):
         lineNum += 3
 
     kpoints = []
-    # iterate over (kStart, kStop) pairs
+    # iterate over (kStart, kStop) pairs and generate points
     for pair in kBounds:
-        start, stop, step = pair[0], pair[1], []
-        # possibly different step for each coordinate
-        for i in range(len(start)):
-            step.append((stop[i] - start[i])/(kNum-1))
+        start, stop = np.array(pair[0]), np.array(pair[1])
+        step = (stop - start)/(kNum - 1)
         # make kNum points between start and stop, including boundaries
         for ptIndex in range(kNum):
-            point = []
-            for i in range(len(start)):
-                point.append(start[i] + ptIndex*step[i])
+            point = start + ptIndex*step
             kpoints.append(point)
     return kpoints
 
@@ -87,15 +85,44 @@ def HamiltonianFn(calcType):
 # This Hamiltonian is from Liu et al PRB 82, 045122 (2010).
 # Complex numbers in p are encoded as "varName" + ("re" or "im").
 def Hamiltonian_8band(p):
+    k_plus = lambda k: k[0] + 1j*k[1]
+    k_minus = lambda k: k[0] - 1j*k[1]
     f = lambda k, F, K: F * k[2]**2 + K * (k[0]**2 + k[1]**2)
-    g = lambda k, U, V: U * k[2] * (k[0] + 1j*k[1]) + V * (k[0] - 1j*k[1])**2
+    g = lambda k, U, V: U * k[2] * k_plus(k) + V * k_minus(k)**2
+
     def H(k):
-        #TODO units? (hbar^2/(2m) factor; 2/hbar factors)
+        # Assume factors of (hbar)^2/(2m) and 2/hbar are absorbed into
+        # constants. TODO: check that this is correct.
         diagonal = [f(k, p["F1"], p["K1"]), f(k, p["F1"], p["K1"]),
                     f(k, p["F3"], p["K3"]), f(k, p["F3"], p["K3"]),
                     f(k, p["F5"], p["K5"]), f(k, p["F5"], p["K5"]),
                     f(k, p["F7"], p["K7"]), f(k, p["F7"], p["K7"])]
-        top = np.empty([8, 8]) #TODO
+
+        top = np.zeros([8, 8], dtype=np.complex128)
+        top[0] = [0, 0, k[2]*p["Q1"], p["P1"]*k_minus(k), p["Q2"]*k_plus(k),
+                  k_plus(k)*p["P2"], k[2]*p["Q3"], k_minus(k)*p["P3"]]
+        # P1,2,3 and Q1,2,3 are real so ignore complex conjugate
+        top[1] = [0, 0, k_plus(k)*p["P1"], -k[2]*p["Q1"], -p["P2"]*k_minus(k),
+                  p["Q2"]*k_minus(k), p["P3"]*k_plus(k), -p["Q3"]*k[2]]
+
+        U35 = p["U35re"] + 1j*p["U35im"]
+        V35 = p["V35re"] + 1j*p["V35im"]
+        U36, V36 = U35.conjugate(), -V35.conjugate()
+        top[2] = [0, 0, 0, 0, g(k, U35, V35), g(k, U36, V36),
+                  f(k, p["F37"], p["K37"]), 
+                  -g(-k, p["U47"], 1j*p["V47im"]).conjugate()]
+        top[3] = [0, 0, 0, 0, g(-k, U36, V36).conjugate(),
+                  -g(-k, U35, V35).conjugate(), g(k, p["U47"], 1j*p["V47im"]),
+                  f(-k, p["F37"], p["K37"]).conjugate()]
+
+        U58 = p["U58re"] + 1j*p["U58im"]
+        V58 = p["V58re"] + 1j*p["V58im"]
+        U68, V68 = -U58.conjugate(), V58.conjugate()
+        top[4] = [0, 0, 0, 0, 0, 0, -g(-k, U68, V68).conjugate(),
+                  g(k, U58, V58)]
+        top[5] = [0, 0, 0, 0, 0, 0, g(-k, U58, V58).conjugate(),
+                  g(k, U68, V68)]
+
         return makeHermitian(top + np.diag(diagonal))
 
     return H
