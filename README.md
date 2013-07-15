@@ -1,6 +1,7 @@
 Implements diagonalization of the Hamiltonians modeling topological insulators from the following papers:
 
 [Liu et al PRB 82, 045122 (2010)](http://prb.aps.org/abstract/PRB/v82/i4/e045122)
+
 [Mahfouzi, Nagaosa and Nikolic PRL 109, 166602 (2012)](http://prl.aps.org/abstract/PRL/v109/i16/e166602)
 
 Usage
