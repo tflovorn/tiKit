@@ -54,12 +54,28 @@ def Hamiltonian_mnk12(p, numLayers):
 
     return H
 
+# Write the per-layer contribution of the given eigenket
+def layerContribution(ket):
+    layers = []
+    for i in range(0, len(ket), 4):
+        mag = 0.0
+        for j in range(4):
+            a = abs(ket[i+j])
+            mag += a*a
+        layers.append(mag)
+    return layers
+
 # Write the output for one kpoint
 def writeOutput(k, eigenvals, eigenkets, outFile):
     #TODO
-    outFile.write(str(k) + "\n")
-    outFile.write(str(eigenvals) + "\n")
-    outFile.write(str(eigenkets) + "\n")
+    outFile.write("k:\n" + str(k) + "\n")
+    outFile.write("eigenvals:\n" + str(eigenvals) + "\n")
+    outFile.write("eigenkets:\n" + str(eigenkets) + "\n")
+    outFile.write("layer contributions:\n")
+    for ket in eigenkets:
+        layers = layerContribution(ket)
+        outFile.write(str(layers) + "\n")
+
     return None
 
 def main():
