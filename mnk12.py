@@ -1,6 +1,7 @@
 import sys, json, math
 import numpy as np
 from scipy import linalg
+import matplotlib.pyplot as plt
 import ti3d_eigen
 from ti3d_eigen import Gamma1, Gamma2, Gamma3, Gamma4, Gamma5
 
@@ -67,7 +68,7 @@ def layerContribution(ket):
 
 # Write the output for one kpoint
 def writeOutput(k, eigenvals, eigenkets, outFile):
-    #TODO
+    #TODO - is there a better format?
     outFile.write("k:\n" + str(k) + "\n")
     outFile.write("eigenvals:\n" + str(eigenvals) + "\n")
     outFile.write("eigenkets:\n" + str(eigenkets) + "\n")
@@ -76,22 +77,50 @@ def writeOutput(k, eigenvals, eigenkets, outFile):
         layers = layerContribution(ket)
         outFile.write(str(layers) + "\n")
 
-    return None
+# Decompose eigenvalList (with format [[k, eigenvals]]) into bands and make
+# band plot.
+def plotEigenvals(eigenvalList):
+    if len(eigenvalList) == 0 or len(eigenvalList[0]) != 2:
+        print("error: invalid input to plotEigenvals")
+        return
+
+    kpoints = []
+    bands = []
+    for i in range(len(eigenvalList[0][1])):
+        bands.append([])
+    for k, eigenvals in eigenvalList:
+        kpoints.append(k)
+        for i in range(len(eigenvals)):
+            bands[i].append(eigenvals[i])
+    for i in range(len(bands)):
+        plt.plot(kpoints, bands[i])
+    plt.show()
 
 def main():
-    # command line arguments
+    # get command line arguments
     numLayers, kpointsFileName, outFileName = parseArgs()
     # read input file
     kpoints = ti3d_eigen.getKpoints(kpointsFileName)
     # get appropriate Hamiltonian
     H = HamiltonianFn("mnk12", numLayers)
 
+    seenZero = False # TODO - fix this hack - keeping only k_x for plot
+    eigenvalList = []
     with open(outFileName, 'w') as outFile:
         # iterate over kpoints (parallelize later if necessary)
         for k in kpoints:
+            # get Hamiltonian for this k-point
             Hk = H(k)
+            # diagonalize Hamiltonian
             eigenvals, eigenkets = linalg.eigh(Hk)
+            # handle output
             writeOutput(k, eigenvals, eigenkets, outFile)
+            if k[1] == 0.0 and (k[0] != 0.0 or not seenZero): # TODO - fix this hack - keeping only k_x for plot
+                if k[0] == 0.0:
+                    seenZero = True
+                eigenvalList.append([k[0], eigenvals])
+    # plotting
+    plotEigenvals(eigenvalList)
 
 if __name__ == "__main__":
     main()
