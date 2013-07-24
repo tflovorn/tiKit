@@ -83,7 +83,8 @@ def plotEigenvals(eigenvalList):
     if len(eigenvalList) == 0 or len(eigenvalList[0]) != 2:
         print("error: invalid input to plotEigenvals")
         return
-
+    DiracCheckLinear = False # set to True to output slope near Dirac point
+    DiracAtZero = []
     kpoints = []
     bands = []
     for i in range(len(eigenvalList[0][1])):
@@ -92,9 +93,28 @@ def plotEigenvals(eigenvalList):
         kpoints.append(k)
         for i in range(len(eigenvals)):
             bands[i].append(eigenvals[i])
+            if DiracCheckLinear:
+                doDiracCheckLinear(i, k, eigenvals, DiracAtZero)
     for i in range(len(bands)):
         plt.plot(kpoints, bands[i])
     plt.show()
+
+# Print diagnostic info about linearity around Dirac point.
+# TODO - Dirac point may not be at k = 0 - need to find it.
+def doDiracCheckLinear(i, k, eigenvals, DiracAtZero):
+    numLayers = len(eigenvals) / 4.0
+    if i == 2.0*numLayers - 1:
+        if k == 0.0:
+            DiracAtZero.append(eigenvals[i])
+        else:
+            print("k: " + str(k))
+            print(str((eigenvals[i] - DiracAtZero[0]) / k))
+    elif i == 2.0*numLayers + 1:
+        if k == 0.0:
+            DiracAtZero.append(eigenvals[i])
+        else:
+            print("k: " + str(k))
+            print(str((eigenvals[i] - DiracAtZero[1]) / k))
 
 def main():
     # get command line arguments
