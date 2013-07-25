@@ -2,7 +2,7 @@ module eigen
     implicit none
     external ZHEEV
 
-    complex*16, dimension(1:4, 1:4) :: Gamma1, Gamma2, Gamma3, Gamma4, Gamma5
+    complex*16, dimension(1:4, 1:4) :: Gamma1, Gamma2, Gamma3, Gamma4, Gamma5, Ident
 
     type :: Mnk12Params
         double precision :: gamma_fm, Delta_n, M, A, B, E_F, C, gamma_c
@@ -40,30 +40,35 @@ contains
     
     subroutine InitGammas()
         ! Liu (2010) notation for Gamma matrices
-        Gamma1(1, :) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (1.0D0, 0.0D0)/)
-        Gamma1(2, :) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (1.0D0, 0.0D0), (0.0D0, 0.0D0)/)
-        Gamma1(3, :) = (/(0.0D0, 0.0D0), (1.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
-        Gamma1(4, :) = (/(1.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma1(:, 1) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (1.0D0, 0.0D0)/)
+        Gamma1(:, 2) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (1.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma1(:, 3) = (/(0.0D0, 0.0D0), (1.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma1(:, 4) = (/(1.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
 
-        Gamma2(1, :) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, -1.0D0)/)
-        Gamma2(2, :) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 1.0D0), (0.0D0, 0.0D0)/)
-        Gamma2(3, :) = (/(0.0D0, 0.0D0), (0.0D0, -1.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
-        Gamma2(4, :) = (/(0.0D0, 1.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma2(:, 1) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, -1.0D0)/)
+        Gamma2(:, 2) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 1.0D0), (0.0D0, 0.0D0)/)
+        Gamma2(:, 3) = (/(0.0D0, 0.0D0), (0.0D0, -1.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma2(:, 4) = (/(0.0D0, 1.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
 
-        Gamma3(1, :) = (/(0.0D0, 0.0D0), (1.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
-        Gamma3(2, :) = (/(1.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
-        Gamma3(3, :) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (-1.0D0, 0.0D0)/)
-        Gamma3(4, :) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (-1.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma3(:, 1) = (/(0.0D0, 0.0D0), (1.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma3(:, 2) = (/(1.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma3(:, 3) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (-1.0D0, 0.0D0)/)
+        Gamma3(:, 4) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (-1.0D0, 0.0D0), (0.0D0, 0.0D0)/)
 
-        Gamma4(1, :) = (/(0.0D0, 0.0D0), (0.0D0, -1.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
-        Gamma4(2, :) = (/(0.0D0, 1.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
-        Gamma4(3, :) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, -1.0D0)/)
-        Gamma4(4, :) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 1.0D0), (0.0D0, 0.0D0)/)
+        Gamma4(:, 1) = (/(0.0D0, 0.0D0), (0.0D0, -1.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma4(:, 2) = (/(0.0D0, 1.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma4(:, 3) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, -1.0D0)/)
+        Gamma4(:, 4) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 1.0D0), (0.0D0, 0.0D0)/)
 
-        Gamma5(1, :) = (/(1.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
-        Gamma5(2, :) = (/(0.0D0, 0.0D0), (-1.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
-        Gamma5(3, :) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (1.0D0, 0.0D0), (0.0D0, 0.0D0)/)
-        Gamma5(4, :) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (-1.0D0, 0.0D0)/)
+        Gamma5(:, 1) = (/(1.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma5(:, 2) = (/(0.0D0, 0.0D0), (-1.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma5(:, 3) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (1.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma5(:, 4) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (-1.0D0, 0.0D0)/)
+
+        Ident(:, 1) = (/(1.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Ident(:, 2) = (/(0.0D0, 0.0D0), (1.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Ident(:, 3) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (1.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Ident(:, 4) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (1.0D0, 0.0D0)/)
     end subroutine
 
     function DefaultMnk12Params()
@@ -78,22 +83,41 @@ contains
         DefaultMnk12Params%gamma_c = 0.25D0
     end function DefaultMnk12Params
 
-    function EigenMnk12(p, numLayers, eigenvals, eigenvectors)
+    function EigenMnk12(p, numLayers, k, eigenvals, eigenvectors)
         type(Mnk12Params), intent(in) :: p
         integer, intent(in) :: numLayers
+        double precision, dimension(1:2) :: k
         double precision, dimension(1:4*numLayers), intent(out) :: eigenvals
         complex*16, dimension(1:4*numLayers, 1:4*numLayers), intent(out) :: eigenvectors
-        integer :: EigenMnk12
+        integer :: EigenMnk12, i
+        complex*16, dimension(1:4, 1:4) :: diagonal, cross, cross_conj
         call InitGammas()
-        ! initialize Hamiltonian in eigenvectors, since call to EigenDecomp
-        ! will overwrite H with eigenvectors
-        ! TODO - replace temp eigenvectors - assumes numLayers = 1
+
+        ! block-diagonal piece
+        diagonal = p%C*Ident + (p%M + 2.0D0*p%B*(cos(k(1)) + cos(k(2)) - 3.0D0))*Gamma5 &
+                     + p%A*(sin(k(1))*Gamma2 + sin(k(2))*Gamma1)
+        ! hop layer n+1 to n
+        cross = p%B*Gamma5 - (0.0D0, 0.5D0)*p%A*Gamma4
+        ! hop layer n to n+1
+        cross_conj = conjg(transpose(cross))
+        
+        ! initialize Hamiltonian
         eigenvectors(:, :) = (0.0D0, 0.0D0)
-        eigenvectors(1, 1) = (1.0D0, 0.0D0)
-        eigenvectors(2, 2) = (2.0D0, 0.0D0)
-        eigenvectors(3, 3) = (3.0D0, 0.0D0)
-        eigenvectors(4, 4) = (4.0D0, 0.0D0)
-        print *, eigenvectors
+        do i=1, 4*numLayers, 4  ! i = 1, 5, 9, ..., 4*numLayers - 3
+            eigenvectors(i:i+3, i:i+3) = diagonal
+            if (i < 4*numLayers - 3) then
+                print *, "cross"
+                eigenvectors(i+4:i+7, i:i+3) = cross
+            end if
+            if (i > 1) then
+                print *, "cross_conj"
+                eigenvectors(i-4:i-1, i:i+3) = cross_conj
+            end if
+        end do
+        print *, eigenvectors(:, 1)
+        print *, eigenvectors(:, 2)
+        print *, eigenvectors(:, 3)
+        print *, eigenvectors(:, 4)
         EigenMnk12 = EigenDecomp(eigenvectors, 4*numLayers, eigenvals)
         if (EigenMnk12 /= 0) then
             ! TODO handle error
