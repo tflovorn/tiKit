@@ -1,6 +1,8 @@
 module eigen
     implicit none
     external ZHEEV
+
+    complex*16, dimension(1:4, 1:4) :: Gamma1, Gamma2, Gamma3, Gamma4, Gamma5
 contains
     ! Call LAPACK routine ZHEEV to get eigenvalues and eigenvectors of the
     ! Hermitian, upper triangular matrix H of order N.
@@ -32,11 +34,40 @@ contains
         call ZHEEV('V', 'U', N, H, N, eigenvals, work, opt_lwork, rwork, EigenDecomp)
     end function EigenDecomp
     
+    subroutine InitGammas()
+        ! Liu (2010) notation for Gamma matrices
+        Gamma1(1, :) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (1.0D0, 0.0D0)/)
+        Gamma1(2, :) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (1.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma1(3, :) = (/(0.0D0, 0.0D0), (1.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma1(4, :) = (/(1.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+
+        Gamma2(1, :) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, -1.0D0)/)
+        Gamma2(2, :) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 1.0D0), (0.0D0, 0.0D0)/)
+        Gamma2(3, :) = (/(0.0D0, 0.0D0), (0.0D0, -1.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma2(4, :) = (/(0.0D0, 1.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+
+        Gamma3(1, :) = (/(0.0D0, 0.0D0), (1.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma3(2, :) = (/(1.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma3(3, :) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (-1.0D0, 0.0D0)/)
+        Gamma3(4, :) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (-1.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+
+        Gamma4(1, :) = (/(0.0D0, 0.0D0), (0.0D0, -1.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma4(2, :) = (/(0.0D0, 1.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma4(3, :) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, -1.0D0)/)
+        Gamma4(4, :) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 1.0D0), (0.0D0, 0.0D0)/)
+
+        Gamma5(1, :) = (/(1.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma5(2, :) = (/(0.0D0, 0.0D0), (-1.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma5(3, :) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (1.0D0, 0.0D0), (0.0D0, 0.0D0)/)
+        Gamma5(4, :) = (/(0.0D0, 0.0D0), (0.0D0, 0.0D0), (0.0D0, 0.0D0), (-1.0D0, 0.0D0)/)
+    end subroutine
+
     function EigenMnk12(numLayers, eigenvals, eigenvectors)
         integer, intent(in) :: numLayers
         double precision, dimension(1:4*numLayers), intent(out) :: eigenvals
         complex*16, dimension(1:4*numLayers, 1:4*numLayers), intent(out) :: eigenvectors
         integer :: EigenMnk12
+        call InitGammas()
         ! initialize Hamiltonian in eigenvectors, since call to EigenDecomp
         ! will overwrite H with eigenvectors
         ! TODO - replace temp eigenvectors - assumes numLayers = 1
