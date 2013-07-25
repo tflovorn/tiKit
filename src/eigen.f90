@@ -106,18 +106,12 @@ contains
         do i=1, 4*numLayers, 4  ! i = 1, 5, 9, ..., 4*numLayers - 3
             eigenvectors(i:i+3, i:i+3) = diagonal
             if (i < 4*numLayers - 3) then
-                print *, "cross"
                 eigenvectors(i+4:i+7, i:i+3) = cross
             end if
             if (i > 1) then
-                print *, "cross_conj"
                 eigenvectors(i-4:i-1, i:i+3) = cross_conj
             end if
         end do
-        print *, eigenvectors(:, 1)
-        print *, eigenvectors(:, 2)
-        print *, eigenvectors(:, 3)
-        print *, eigenvectors(:, 4)
         EigenMnk12 = EigenDecomp(eigenvectors, 4*numLayers, eigenvals)
         if (EigenMnk12 /= 0) then
             ! TODO handle error
