@@ -1,12 +1,12 @@
 FC = gfortran
 FFLAGS =
 
-LDFLAGS =
+LDFLAGS = -L/usr/lib -llapack -lblas
 
 all: main.out
 
 eigen.mod eigen.o: eigen.f90
-	$(FC) $(FFLAGS) -c -o eigen.o eigen.f90
+	$(FC) -c -o eigen.o eigen.f90 $(FFLAGS)
 
 main.out: eigen.mod eigen.o main.f90
-	$(FC) $(FFLAGS) $(LDFLAGS) -o main.out main.f90 eigen.o
+	$(FC) -o main.out main.f90 eigen.o $(FFLAGS) $(LDFLAGS) 
