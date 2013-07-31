@@ -1,20 +1,21 @@
+#!/usr/bin/python
 import sys
 
 if len(sys.argv) != 3:
-    print("Usage: python gen_bi2se3_poscar.py (number of 15-layer cells) (vacuum thickness in A)")
+    print("Usage: bi2se3poscar (number of 15-layer cells) (vacuum thickness in A)")
     sys.exit(2)
 
 # number of 15-layer cells (3x quintuple layers)
 N3QL = int(sys.argv[1])
 if N3QL < 1:
-    print("Usage: python gen_bi2se3_poscar.py (number of 15-layer cells) (vacuum thickness in A)\n")
+    print("Usage: bi2se3poscar (number of 15-layer cells) (vacuum thickness in A)\n")
     print("Number of 15-layer cells must be at least 1.\n")
     sys.exit(2)
 
 # vacuum thickness in Angstroms (absolute units)
 c_vac_abs = float(sys.argv[2])
 if c_vac_abs < 0.0:
-    print("Usage: python gen_bi2se3_poscar.py (number of 15-layer cells) (vacuum thickness in A)\n")
+    print("Usage: bi2se3poscar (number of 15-layer cells) (vacuum thickness in A)\n")
     print("Negative vacuum thickness not allowed.\n")
     sys.exit(2)
 
