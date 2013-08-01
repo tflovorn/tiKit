@@ -1,4 +1,4 @@
-# Parses PROCAR file
+# procar.py: Parses PROCAR file
 #
 # Copyright (c) 2013 Tim Lovorn (tflovorn@crimson.ua.edu)
 # Released under the MIT License
@@ -61,7 +61,7 @@ class PROCAR(object):
 
     # Return data for the k-point with id given by kId in the PROCAR file
     # format (the first id is 1, not 0).
-    def kPoint(self, kId):
+    def KPoint(self, kId):
         return self.kPoints[kId-1]
    
 # Represents the data for one k-point.
@@ -90,7 +90,7 @@ class KPoint(object):
 
     # Return data for the band with id given by bandId in the PROCAR file
     # format (the first id is 1, not 0).
-    def band(self, bandId):
+    def Band(self, bandId):
         return self.bands[bandId-1]
 
 
@@ -121,7 +121,7 @@ class Band(object):
 
     # Return data for the table with id given by tableId in the PROCAR file
     # format (the first id is 1, not 0).
-    def table(self, tableId):
+    def Table(self, tableId):
         return self.tables[tableId-1]
 
 
@@ -150,7 +150,7 @@ class IonTable(object):
 
     # Return data for the ion with id given by ionId in the PROCAR file
     # format (the first id is 1, not 0).
-    def ion(self, ionId):
+    def Ion(self, ionId):
         return self.ions[ionId-1]
 
 # Represents data for one ion, belonging to a (k-point, band, ionTable).
@@ -178,9 +178,7 @@ class IonTotalOnly(object):
 if __name__ == "__main__":
     # test - TODO arguments?
     with open('PROCAR', 'r') as procarFile:
-        procar = PROCAR(procarFile, True, False, False)
+        procar = PROCAR(procarFile, nonCol=True, lmDecomposed=False, storeIds=False)
         print(procar.Nk, procar.Nb, procar.Ni)
-        # having to index by one less than id's is annoying
-        # TODO - is there a simple solution?
-        print(procar.kPoint(1).band(1).table(1).ion(20).tot)
+        print(procar.KPoint(1).Band(1).Table(1).Ion(20).tot)
         raw_input("-->")
