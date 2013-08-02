@@ -62,7 +62,7 @@ def MarkSurfaceStates(procar, depth, threshold):
 # otherwise.
 def IsSurface(table, depth, threshold):
     Ni = len(table.ions)
-    sumTop, sumBottom = 0, 0
+    sumTop, sumBottom = 0.0, 0.0
     tot = abs(table.tot.tot)
     # bail on tot == 0.0; could in principle miss some surface states which
     # have weight concentrated near the surface but zero total
@@ -74,6 +74,7 @@ def IsSurface(table, depth, threshold):
         sumBottom += table.Ion(Ni - i + 1).tot
     # surface weight above threshold?
     if abs(sumTop)/tot > threshold or abs(sumBottom)/tot > threshold:
+        print('top: ' + str(sumTop) + ' bottom: ' + str(sumBottom) + ' total: ' + str(tot))
         return True
     # not above threshold
     return False
