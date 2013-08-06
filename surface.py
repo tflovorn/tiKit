@@ -43,12 +43,15 @@ import parseProcar
 #
 # TODO it would be nice to have an automatic procedure for choosing good
 # values for depth and threshold.
-def MarkSurfaceStates(procar, depth, threshold):
+#
+# strategy = 'SquareSum' or 'Sum' - are PROCAR values squared before
+# summation, or not?
+def MarkSurfaceStates(procar, depth, threshold, strategy='SumSquare'):
     for kPoint in procar.kPoints:
         for band in kPoint.bands:
             marked = False
             for table in band.tables:
-                if IsSurface(table, depth, threshold):
+                if IsSurface(table, depth, threshold, strategy):
                     table.surface = True
                     marked = True
                 else:
@@ -60,21 +63,34 @@ def MarkSurfaceStates(procar, depth, threshold):
 # Return true if the given table meets the requirements for a surface state
 # as described in the documentation for MarkSurfaceStates. Return false
 # otherwise.
-def IsSurface(table, depth, threshold):
-    Ni = len(table.ions)
-    sumTop, sumBottom = 0.0, 0.0
-    tot = abs(table.tot.tot)
-    # bail on tot == 0.0; could in principle miss some surface states which
-    # have weight concentrated near the surface but zero total
-    if tot < 1e-9:
+def IsSurface(table, depth, threshold, strategy):
+    if strategy not in ['SumSquare', 'Sum']:
+        print("error: invalid strategy")
         return False
+    Ni = len(table.ions)
+    sumTop, sumBottom, sumAll = 0.0, 0.0, 0.0
     # iterate over ions close to the top/bottom
-    for i in range(1, depth+1): # i = 1, 2, ..., depth
-        sumTop += table.Ion(i).tot
-        sumBottom += table.Ion(Ni - i + 1).tot
+    for i in range(1, Ni+1): 
+        if strategy == 'SumSquare':
+            sumAll += table.Ion(i).SquareSum()
+        if i <= depth:
+            # only here if i = 1, 2, ..., depth
+            if strategy == 'SumSquare':
+                sumTop += table.Ion(i).SquareSum()
+                sumBottom += table.Ion(Ni - i + 1).SquareSum()
+            elif strategy == 'Sum':
+                sumTop += table.Ion(i).tot
+                sumBottom += table.Ion(Ni - i + 1).tot
+    if strategy == 'Sum':
+        sumAll = abs(table.tot.tot)
     # surface weight above threshold?
-    if abs(sumTop)/tot > threshold or abs(sumBottom)/tot > threshold:
-        print('top: ' + str(sumTop) + ' bottom: ' + str(sumBottom) + ' total: ' + str(tot))
+    # note that sum(Top, Bottom, All) >= 0
+    if sumAll < 1e-9:
+        # total weight too small; assume not surface state
+        return False
+    if sumTop/sumAll > threshold or sumBottom/sumAll > threshold:
+        # seems to be a surface state
+        print('top: ' + str(sumTop) + ' bottom: ' + str(sumBottom) + ' total: ' + str(sumAll))
         return True
     # not above threshold
     return False

@@ -165,6 +165,11 @@ class Ion(object):
         self.dxy, self.dyz, self.dz2, self.dxz = map(float, [l[5], l[6], l[7], l[8]])
         self.dx2, self.tot = map(float, [l[9], l[10]])
 
+    def SquareSum(self):
+        return sum(map(lambda x: x*x, [self.s, self.py, self.pz, self.px,
+                                   self.dxy, self.dyz, self.dz2, self.dxz,
+                                   self.dx2]))
+
 # Represents data for one ion, belonging to a (k-point, band, ionTable).
 # Discards lm-decomposed data. Contains properties ionId, tot.
 class IonTotalOnly(object):
