@@ -132,16 +132,17 @@ def writeRhombPOSCAR(f):
     # write lattice basis
     f.write(str(a_hex_abs) + "\n")          # lattice parameter (scale)
     cta = str(c_t_abs / a_hex_abs)
-    f.write("-0.5 -0.28867513459481288225 " + cta + "\n")   # t_1
+    f.write("0.5 -0.28867513459481288225 " + cta + "\n")   # t_1
     f.write("0.0 0.577350269189625764509 " + cta + "\n")    # t_2
-    f.write("0.5 -0.28867513459481288225 " + cta + "\n")    # t_3
+    f.write("-0.5 -0.28867513459481288225 " + cta + "\n")    # t_3
     # number of Bi/Se atoms
     f.write(str(2*N3QL) + " " + str(3*N3QL) + "\n") 
     # direct coordinates (atom positions given in lattice basis)
     f.write("Direct\n") 
 
     layerLabels = ["QL1-Bi1p-A", "QL2-Bi1-A", "QL1-Se1-A", "QL2-Se1p-A", "QL3-Se2-A"]
-    factors = [0, (c_1 + 2.0*c_2)/c_hex, (c_t + c_1)/c_hex, (c_t + 2.0*c_1 + 2.0*c_2)/c_hex, (2.0*c_t + c_1 + c_2)/c_hex]
+    # c-axis positions: layer 4, 7, 1, 10, 13
+    factors = [(c_1 + 2.0*c_2)/c_hex, (c_t + c_1)/c_hex, 0.0, (c_t + 2.0*c_1 + 2.0*c_2)/c_hex, (2.0*c_t + c_1 + c_2)/c_hex]
     # atom positions
     for n in range(N3QL):
         for label, factor in zip(layerLabels, factors):
