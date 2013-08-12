@@ -1,3 +1,4 @@
+import sys
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import parseProcar, surface
@@ -28,8 +29,11 @@ def PlotBands(procar):
     plt.show()
 
 if __name__ == "__main__":
+    procarFileName = 'PROCAR'
+    if len(sys.argv) > 1:
+        procarFileName = sys.argv[1]
     procar = None
-    with open('PROCAR', 'r') as f:
+    with open(procarFileName, 'r') as f:
         procar = parseProcar.PROCAR(f, nonCol=True, lmDecomposed=True, storeIds=True)
     surface.MarkSurfaceStates(procar, 5, 0.70)
     PlotBands(procar)
