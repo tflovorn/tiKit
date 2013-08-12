@@ -1,4 +1,5 @@
 POSCAR
 PROCAR
+EIGENVAL
 *.swp
 *.pyc
