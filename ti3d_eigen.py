@@ -4,6 +4,10 @@ from scipy import linalg
 import matplotlib.pyplot as plt
 
 # 3D model notation for Gamma matrices
+Ident = np.array([[1, 0, 0, 0],
+                  [0, 1, 0, 0],
+                  [0, 0, 1, 0],
+                  [0, 0, 0, 1]])
 Gamma1 = np.array([[0, 0, 0, 1],
                    [0, 0, 1, 0],
                    [0, 1, 0, 0],
@@ -89,14 +93,15 @@ def Hamiltonian_8band(p):
     f = lambda k, F, K: F * k[2]**2 + K * (k[0]**2 + k[1]**2)
     g = lambda k, U, V: U * k[2] * k_plus(k) + V * k_minus(k)**2
 
-    def H(k):
+    def H(in_k):
         # Convert k from 2pi/(lattice vector) units to 1/A.
         # TODO: ensure that this assignment of a and c is correct.
         a_hex = 4.138
         c_hex = 28.64
-        k[0] = 2.0 * math.pi * k[0] / a_hex
-        k[1] = 2.0 * math.pi * k[1] / a_hex
-        k[2] = 2.0 * math.pi * k[2] / c_hex
+        k = [0, 0, 0]
+        k[0] = 2.0 * math.pi * in_k[0] / a_hex
+        k[1] = 2.0 * math.pi * in_k[1] / a_hex
+        k[2] = 2.0 * math.pi * in_k[2] / c_hex
 
         # Assume factors of (hbar)^2/(2m) and 2/hbar are absorbed into
         # constants. TODO: check that this is correct.
@@ -144,21 +149,31 @@ def Hamiltonian_4band(p):
     # functions in H0, Eq. 16, Liu 2010
     epsilon = lambda k: p["C0"] + p["C1"]*kz2(k) + p["C2"]*kp2(k)
     M = lambda k: p["M0"] + p["M1"]*kz2(k) + p["M2"]*kp2(k)
-    A = lambda k: p["A0"] - 0.5*p["A0"]*kp2(k) #TODO check guesses A2 = (-1/2) A0 and B2 = (-1/2) B0
-    B = lambda k: p["B0"] - 0.5*p["B0"]*kz2(k)
+    
+    A2 = -0.5 * p["A0"]
+    if "A2" in p:
+        A2 = p["A2"]
+    A = lambda k: p["A0"] + A2*kp2(k)
+
+    B2 = -0.5 * p["B0"]
+    if "B2" in p:
+        B2 = p["B2"]
+    B = lambda k: p["B0"] + B2*kz2(k)
+
     # parenthetic expression in H3, Eq. 17, Liu 2010
     q = lambda kx, ky: kx**3 - 3.0*kx*(ky**2)
 
-    def H(k):
+    def H(in_k):
         # Convert k from 2pi/(lattice vector) units to 1/A.
         # TODO: ensure that this assignment of a and c is correct.
         a_hex = 4.138
         c_hex = 28.64
-        k[0] = 2.0 * math.pi * k[0] / a_hex
-        k[1] = 2.0 * math.pi * k[1] / a_hex
-        k[2] = 2.0 * math.pi * k[2] / c_hex
+        k = [0, 0, 0]
+        k[0] = 2.0 * math.pi * in_k[0] / a_hex
+        k[1] = 2.0 * math.pi * in_k[1] / a_hex
+        k[2] = 2.0 * math.pi * in_k[2] / c_hex
 
-        H0 = epsilon(k) + M(k)*Gamma5 + B(k)*Gamma4*k[2] + A(k)*(Gamma1*k[1] - Gamma2*k[0])
+        H0 = epsilon(k)*Ident + M(k)*Gamma5 + B(k)*Gamma4*k[2] + A(k)*(Gamma1*k[1] - Gamma2*k[0])
         H3 = p["R1"]*Gamma3*q(k[0], k[1]) - p["R2"]*Gamma4*q(k[1], k[0])
         return H0 + H3
 
@@ -229,6 +244,8 @@ def main():
             if k[1] == 0.0 and (k[0] != 0.0 or not seenZero): # TODO - fix this hack - keeping only k_x for plot
                 if k[0] == 0.0:
                     seenZero = True
+                a_hex = 4.138
+                k[0] = 2.0 * math.pi * k[0] / a_hex
                 eigenvalList.append([k[0], eigenvals])
     # plotting
     plotEigenvals(eigenvalList)
