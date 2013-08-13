@@ -109,13 +109,14 @@ def writeHexPOSCAR(f):
     f.write(str(6*N3QL) + " " + str(9*N3QL) + "\n") # number of Bi/Se atoms
     f.write("Direct\n") # direct coordinates (not cartesian)
     # atom positions
-    for n in range(N3QL): # A1, B1, C1
+    for n in range(N3QL):
         f.write("0.666667 0.333333 " + str(n*c_hex + c_1) + " QL1-Bi1-B\n")
         f.write("0.0 0.0 " + str(n*c_hex + c_1 + 2.0*c_2) + " QL1-Bi1p-A\n")
         f.write("0.0 0.0 " + str(n*c_hex + c_vdw + c_ql + c_1) + " QL2-Bi1-A\n")
         f.write("0.333333 0.666667 " + str(n*c_hex + c_vdw + c_ql + c_1 + 2.0*c_2) + " QL2-Bi1p-C\n")
         f.write("0.333333 0.666667 " + str(n*c_hex + 2.0*c_vdw + 2.0*c_ql + c_1) + " QL3-Bi1-C\n")
         f.write("0.666667 0.333333 " + str(n*c_hex + 2.0*c_vdw + 2.0*c_ql + c_1 + 2.0*c_2) + " QL3-Bi1p-B\n")
+    for n in range(N3QL): 
         f.write("0.0 0.0 " + str(n*c_hex) + " QL1-Se1-A\n")
         f.write("0.333333 0.666667 " + str(n*c_hex + c_1 + c_2) + " QL1-Se2-C\n")
         f.write("0.666667 0.333333 " + str(n*c_hex + c_ql) + " QL1-Se1p-B\n")
@@ -142,13 +143,12 @@ def writeRhombPOSCAR(f):
 
     layerLabels = ["QL1-Bi1p-A", "QL2-Bi1-A", "QL1-Se1-A", "QL2-Se1p-A", "QL3-Se2-A"]
     # c-axis positions: layer 4, 7, 1, 10, 13
-    factors = [(c_1 + 2.0*c_2)/c_hex, (c_t + c_1)/c_hex, 0.0, (c_t + 2.0*c_1 + 2.0*c_2)/c_hex, (2.0*c_t + c_1 + c_2)/c_hex]
+    coords = [(c_1 + 2.0*c_2)/c_hex, (c_t + c_1)/c_hex, 0.0, (c_t + 2.0*c_1 + 2.0*c_2)/c_hex, (2.0*c_t + c_1 + c_2)/c_hex]
     # atom positions
-    for n in range(N3QL):
-        for label, factor in zip(layerLabels, factors):
-            coord = n + factor
-            allCoords = str(coord) + " " + str(coord) + " " + str(coord)
-            f.write(allCoords + " " + label + "\n")
+    # N3QL = 1 only - TODO generalize? make sure to keep Bi at top and Se below Bi
+    for label, coord in zip(layerLabels, coords):
+        allCoords = str(coord) + " " + str(coord) + " " + str(coord)
+        f.write(allCoords + " " + label + "\n")
 
 if __name__ == "__main__":
     main()
