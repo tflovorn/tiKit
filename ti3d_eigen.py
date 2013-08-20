@@ -171,7 +171,7 @@ def Hamiltonian_4band(p):
         k = [0, 0, 0]
         k[0] = 2.0 * math.pi * in_k[0] / a_hex
         k[1] = 2.0 * math.pi * in_k[1] / a_hex
-        k[2] = 2.0 * math.pi * in_k[2] / c_hex
+        k[2] = 2.0 * math.pi * in_k[2] / a_hex
 
         H0 = epsilon(k)*Ident + M(k)*Gamma5 + B(k)*Gamma4*k[2] + A(k)*(Gamma1*k[1] - Gamma2*k[0])
         H3 = p["R1"]*Gamma3*q(k[0], k[1]) - p["R2"]*Gamma4*q(k[1], k[0])
