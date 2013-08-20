@@ -150,12 +150,12 @@ def Hamiltonian_4band(p):
     epsilon = lambda k: p["C0"] + p["C1"]*kz2(k) + p["C2"]*kp2(k)
     M = lambda k: p["M0"] + p["M1"]*kz2(k) + p["M2"]*kp2(k)
     
-    A2 = -0.5 * p["A0"]
+    A2 = -(1.0/6.0) * p["A0"]
     if "A2" in p:
         A2 = p["A2"]
     A = lambda k: p["A0"] + A2*kp2(k)
 
-    B2 = -0.5 * p["B0"]
+    B2 = -(1.0/6.0) * p["B0"]
     if "B2" in p:
         B2 = p["B2"]
     B = lambda k: p["B0"] + B2*kz2(k)
