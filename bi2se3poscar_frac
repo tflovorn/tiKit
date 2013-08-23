@@ -26,7 +26,7 @@
 #     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #     THE SOFTWARE.
 #
-import sys
+import sys, math
 
 usageStr = "Usage: bi2se3poscar_frac (number of 5-layer cells) (vacuum thickness in A)"
 
@@ -88,31 +88,33 @@ def writeHexPOSCAR(f):
     # atom positions: Bi
     ql_state = 1
     for n in range(N5L):
+        offset = math.floor(n / 3.0) * c_hex
         if ql_state == 1:
-            f.write("0.666667 0.333333 " + str(n*c_hex + c_1) + " QL1-Bi1-B\n")
-            f.write("0.0 0.0 " + str(n*c_hex + c_1 + 2.0*c_2) + " QL1-Bi1p-A\n")
+            f.write("0.666667 0.333333 " + str(offset + c_1) + " QL1-Bi1-B\n")
+            f.write("0.0 0.0 " + str(offset + c_1 + 2.0*c_2) + " QL1-Bi1p-A\n")
         elif ql_state == 2:
-            f.write("0.0 0.0 " + str(n*c_hex + c_vdw + c_ql + c_1) + " QL2-Bi1-A\n")
-            f.write("0.333333 0.666667 " + str(n*c_hex + c_vdw + c_ql + c_1 + 2.0*c_2) + " QL2-Bi1p-C\n")
+            f.write("0.0 0.0 " + str(offset + c_vdw + c_ql + c_1) + " QL2-Bi1-A\n")
+            f.write("0.333333 0.666667 " + str(offset + c_vdw + c_ql + c_1 + 2.0*c_2) + " QL2-Bi1p-C\n")
         elif ql_state == 3:
-            f.write("0.333333 0.666667 " + str(n*c_hex + 2.0*c_vdw + 2.0*c_ql + c_1) + " QL3-Bi1-C\n")
-            f.write("0.666667 0.333333 " + str(n*c_hex + 2.0*c_vdw + 2.0*c_ql + c_1 + 2.0*c_2) + " QL3-Bi1p-B\n")
+            f.write("0.333333 0.666667 " + str(offset + 2.0*c_vdw + 2.0*c_ql + c_1) + " QL3-Bi1-C\n")
+            f.write("0.666667 0.333333 " + str(offset + 2.0*c_vdw + 2.0*c_ql + c_1 + 2.0*c_2) + " QL3-Bi1p-B\n")
         ql_state = (ql_state % 3) + 1
     # atom positions: Se
     ql_state = 1
     for n in range(N5L):
+        offset = math.floor(n / 3.0) * c_hex
         if ql_state == 1:
-            f.write("0.0 0.0 " + str(n*c_hex) + " QL1-Se1-A\n")
-            f.write("0.333333 0.666667 " + str(n*c_hex + c_1 + c_2) + " QL1-Se2-C\n")
-            f.write("0.666667 0.333333 " + str(n*c_hex + c_ql) + " QL1-Se1p-B\n")
+            f.write("0.0 0.0 " + str(offset) + " QL1-Se1-A\n")
+            f.write("0.333333 0.666667 " + str(offset + c_1 + c_2) + " QL1-Se2-C\n")
+            f.write("0.666667 0.333333 " + str(offset + c_ql) + " QL1-Se1p-B\n")
         elif ql_state == 2:
-            f.write("0.333333 0.666667 " + str(n*c_hex + c_vdw + c_ql) + " QL2-Se1-C\n")
-            f.write("0.666667 0.333333 " + str(n*c_hex + c_vdw + c_ql + c_1 + c_2) + " QL2-Se2-B\n")
-            f.write("0.0 0.0 " + str(n*c_hex + c_vdw + 2.0*c_ql) + " QL2-Se1p-A\n")
+            f.write("0.333333 0.666667 " + str(offset + c_vdw + c_ql) + " QL2-Se1-C\n")
+            f.write("0.666667 0.333333 " + str(offset + c_vdw + c_ql + c_1 + c_2) + " QL2-Se2-B\n")
+            f.write("0.0 0.0 " + str(offset + c_vdw + 2.0*c_ql) + " QL2-Se1p-A\n")
         elif ql_state == 3:
-            f.write("0.666667 0.333333 " + str(n*c_hex + 2.0*c_vdw + 2.0*c_ql) + " QL3-Se1-B\n")
-            f.write("0.0 0.0 " + str(n*c_hex + 2.0*c_vdw + 2.0*c_ql + c_1 + c_2) + " QL3-Se2-A\n")
-            f.write("0.333333 0.666667 " + str(n*c_hex + 2.0*c_vdw + 3.0*c_ql) + " QL3-Se1p-C\n")
+            f.write("0.666667 0.333333 " + str(offset + 2.0*c_vdw + 2.0*c_ql) + " QL3-Se1-B\n")
+            f.write("0.0 0.0 " + str(offset + 2.0*c_vdw + 2.0*c_ql + c_1 + c_2) + " QL3-Se2-A\n")
+            f.write("0.333333 0.666667 " + str(offset + 2.0*c_vdw + 3.0*c_ql) + " QL3-Se1p-C\n")
         ql_state = (ql_state % 3) + 1
 
 if __name__ == "__main__":
