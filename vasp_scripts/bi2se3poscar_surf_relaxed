@@ -1,0 +1,133 @@
+#!/usr/bin/python
+#
+# Generate POSCAR for Bi2Se3 system. Hexagonal cells; possible to produce
+# a cell smaller than the unit cell (which is 3 of the 5-layer cells).
+# Uses relaxed distances between 5-layer cells as given in:
+# W. Liu et al., PRB 87, 205315 (2013)
+#
+# Usage: bi2se3poscar_surf_relaxed (number of 5-layer cells) (vacuum thickness in A)
+#
+#
+# Copyright (c) 2013 Tim Lovorn (tflovorn@crimson.ua.edu)
+# Released under the MIT License
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+#     The above copyright notice and this permission notice shall be included in
+#     all copies or substantial portions of the Software.
+#
+#     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#     THE SOFTWARE.
+#
+import sys, math
+
+usageStr = "Usage: bi2se3poscar_frac (number of 5-layer cells) (vacuum thickness in A)"
+
+if len(sys.argv) != 3:
+    print(usageStr)
+    sys.exit(2)
+
+# number of 15-layer cells (3x quintuple layers)
+N5L = int(sys.argv[1])
+if N5L < 1:
+    print(usageStr)
+    print("Number of 5-layer cells must be at least 1.")
+    sys.exit(2)
+
+# vacuum thickness in Angstroms (absolute units)
+c_vac_abs = float(sys.argv[2])
+if c_vac_abs < 0.0:
+    print(usageStr)
+    print("Negative vacuum thickness not allowed.")
+    sys.exit(2)
+
+# lattice parameters in Angstroms (absolute units)
+a_hex_abs = 4.138
+c_1_abs = 1.7644
+c_2_abs = 1.8799
+c_ql_abs = 2.0*c_1_abs + 2.0*c_2_abs
+# -- distances between quintuple-layers: 1st index = N5L - 1
+c_vdw_abs = [[], [2.868], [2.912, 2.912], [2.895, 2.870, 2.895],
+             [2.871, 2.860, 2.860, 2.871],
+             [2.811, 2.800, 2.796, 2.800, 2.811]]
+c_struct = N5L*c_ql_abs + sum(c_vdw_abs[N5L-1])
+c_tot_abs = c_struct + c_vac_abs
+
+# c axis length in units relative to a_hex_abs
+c_tot = c_tot_abs / a_hex_abs
+
+# c axis lattice parameters in units relative to c_tot_abs
+c_1 = c_1_abs / c_tot_abs
+c_2 = c_2_abs / c_tot_abs
+c_ql = c_ql_abs / c_tot_abs
+c_vdw = []
+for vdw_list in c_vdw_abs:
+    c_vdw.append([])
+    for dist in vdw_list:
+        c_vdw[-1].append(dist / c_tot_abs)
+
+def main():
+    f = open('POSCAR', 'w')
+    try:
+        writeHexPOSCAR(f)
+    finally:
+        f.close()
+
+def writeHexPOSCAR(f):
+    header = "Bi2Se3 hex cell: " + str(N5L) + "x5 layers; vacuum " + str(c_vac_abs) + " Angstroms\n"
+    f.write(header)
+    f.write(str(a_hex_abs) + "\n")          # lattice parameter (scale)
+    f.write("1.0 0.0 0.0\n")            # a_1
+    f.write("-0.5 0.86602540378443864676 0.0\n")       # a_2
+    f.write("0.0 0.0 " + str(c_tot) + "\n")    # a_3
+    f.write(str(2*N5L) + " " + str(3*N5L) + "\n") # number of Bi/Se atoms
+    f.write("Direct\n") # direct coordinates (not cartesian)
+    # atom positions: Bi
+    ql_state = 1
+    offset = 0.0
+    vdw = c_vdw[N5L-1]
+    for n in range(N5L):
+        if ql_state == 1:
+            f.write("0.666667 0.333333 " + str(offset + c_1) + " QL1-Bi1-B\n")
+            f.write("0.0 0.0 " + str(offset + c_1 + 2.0*c_2) + " QL1-Bi1p-A\n")
+        elif ql_state == 2:
+            f.write("0.0 0.0 " + str(offset + vdw[n-1] + c_ql + c_1) + " QL2-Bi1-A\n")
+            f.write("0.333333 0.666667 " + str(offset + vdw[n-1] + c_ql + c_1 + 2.0*c_2) + " QL2-Bi1p-C\n")
+        elif ql_state == 3:
+            f.write("0.333333 0.666667 " + str(offset + vdw[n-1] + vdw[n-2] + 2.0*c_ql + c_1) + " QL3-Bi1-C\n")
+            f.write("0.666667 0.333333 " + str(offset + vdw[n-1] + vdw[n-2] + 2.0*c_ql + c_1 + 2.0*c_2) + " QL3-Bi1p-B\n")
+            if n < N5L-1:
+                offset += 3.0*c_ql + vdw[n] + vdw[n-1] + vdw[n-2]
+        ql_state = (ql_state % 3) + 1
+    # atom positions: Se
+    ql_state = 1
+    offset = 0.0
+    for n in range(N5L):
+        if ql_state == 1:
+            f.write("0.0 0.0 " + str(offset) + " QL1-Se1-A\n")
+            f.write("0.333333 0.666667 " + str(offset + c_1 + c_2) + " QL1-Se2-C\n")
+            f.write("0.666667 0.333333 " + str(offset + c_ql) + " QL1-Se1p-B\n")
+        elif ql_state == 2:
+            f.write("0.333333 0.666667 " + str(offset + vdw[n-1] + c_ql) + " QL2-Se1-C\n")
+            f.write("0.666667 0.333333 " + str(offset + vdw[n-1] + c_ql + c_1 + c_2) + " QL2-Se2-B\n")
+            f.write("0.0 0.0 " + str(offset + vdw[n-1] + 2.0*c_ql) + " QL2-Se1p-A\n")
+        elif ql_state == 3:
+            f.write("0.666667 0.333333 " + str(offset + vdw[n-1] + vdw[n-2] + 2.0*c_ql) + " QL3-Se1-B\n")
+            f.write("0.0 0.0 " + str(offset + vdw[n-1] + vdw[n-2] + 2.0*c_ql + c_1 + c_2) + " QL3-Se2-A\n")
+            f.write("0.333333 0.666667 " + str(offset + vdw[n-1] + vdw[n-2] + 3.0*c_ql) + " QL3-Se1p-C\n")
+            if n < N5L-1:
+                offset += 3.0*c_ql + vdw[n] + vdw[n-1] + vdw[n-2]
+        ql_state = (ql_state % 3) + 1
+
+if __name__ == "__main__":
+    main()

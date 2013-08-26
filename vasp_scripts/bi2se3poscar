@@ -1,0 +1,154 @@
+#!/usr/bin/python
+#
+# Generate POSCAR for Bi2Se3 system
+# Usage: bi2se3poscar (hex or rhomb) (number of 15-layer cells) (vacuum thickness in A)
+#
+#
+# Copyright (c) 2013 Tim Lovorn (tflovorn@crimson.ua.edu)
+# Released under the MIT License
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+#     The above copyright notice and this permission notice shall be included in
+#     all copies or substantial portions of the Software.
+#
+#     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#     THE SOFTWARE.
+#
+import sys
+
+usageStr = "Usage: bi2se3poscar (hex or rhomb) (number of 15-layer cells) (vacuum thickness in A)"
+
+if len(sys.argv) != 4:
+    print(usageStr)
+    sys.exit(2)
+
+# lattice type ('hex' or 'rhomb')
+latType = sys.argv[1]
+if latType not in ['hex', 'rhomb']:
+    print(usageStr)
+    sys.exit(2)
+
+# number of 15-layer cells (3x quintuple layers)
+N3QL = int(sys.argv[2])
+if N3QL < 1:
+    print(usageStr)
+    print("Number of 15-layer cells must be at least 1.")
+    sys.exit(2)
+#TODO - can we support a rhombohedral supercell?
+#   Supporting this will require changing c-axis values for
+#   rhomb lattice vectors and atom positions.
+if latType == 'rhomb' and N3QL > 1:
+    print()
+    print("Number of 15-layer cells > 1 is unsupported for rhombohedral cell.")
+    sys.exit(2)
+
+# vacuum thickness in Angstroms (absolute units)
+c_vac_abs = float(sys.argv[3])
+if c_vac_abs < 0.0:
+    print(usageStr)
+    print("Negative vacuum thickness not allowed.")
+    sys.exit(2)
+#TODO - can we do a surface calc with rhomb cell?
+#   Seems unlikely since all lattice vectors have z-component.
+#   Supporting finite vacuum will require changing c-axis values for
+#   rhomb lattice vectors and atom positions.
+if latType == 'rhomb' and c_vac_abs > 0.0:
+    print(usageStr)
+    print("Nonzero vacuum length is not supported for rhombohedral cell.")
+    sys.exit(2)
+
+# lattice parameters in Angstroms (absolute units)
+a_hex_abs = 4.138
+c_1_abs = 1.7644
+c_2_abs = 1.8799
+c_vdw_abs = 2.2328
+c_ql_abs = 2.0*c_1_abs + 2.0*c_2_abs
+c_t_abs = c_ql_abs + c_vdw_abs
+c_hex_abs = 3.0*c_t_abs
+c_tot_abs = N3QL*c_hex_abs + c_vac_abs
+
+# c axis length in units relative to a_hex_abs
+c_tot = c_tot_abs / a_hex_abs
+
+# c axis lattice parameters in units relative to c_tot_abs
+c_1 = c_1_abs / c_tot_abs
+c_2 = c_2_abs / c_tot_abs
+c_vdw = c_vdw_abs / c_tot_abs
+c_ql = c_ql_abs / c_tot_abs
+c_t = c_t_abs / c_tot_abs
+c_hex = c_hex_abs / c_tot_abs
+
+def main():
+    f = open('POSCAR', 'w')
+    try:
+        if latType == 'hex':
+            writeHexPOSCAR(f)
+        elif latType == 'rhomb':
+            writeRhombPOSCAR(f)
+    finally:
+        f.close()
+
+def writeHexPOSCAR(f):
+    header = "Bi2Se3 hex cell: " + str(N3QL) + "x15 layers; vacuum " + str(c_vac_abs) + " Angstroms\n"
+    f.write(header)
+    f.write(str(a_hex_abs) + "\n")          # lattice parameter (scale)
+    f.write("1.0 0.0 0.0\n")            # a_1
+    f.write("-0.5 0.86602540378443864676 0.0\n")       # a_2
+    f.write("0.0 0.0 " + str(c_tot) + "\n")    # a_3
+    f.write(str(6*N3QL) + " " + str(9*N3QL) + "\n") # number of Bi/Se atoms
+    f.write("Direct\n") # direct coordinates (not cartesian)
+    # atom positions
+    for n in range(N3QL):
+        f.write("0.666667 0.333333 " + str(n*c_hex + c_1) + " QL1-Bi1-B\n")
+        f.write("0.0 0.0 " + str(n*c_hex + c_1 + 2.0*c_2) + " QL1-Bi1p-A\n")
+        f.write("0.0 0.0 " + str(n*c_hex + c_vdw + c_ql + c_1) + " QL2-Bi1-A\n")
+        f.write("0.333333 0.666667 " + str(n*c_hex + c_vdw + c_ql + c_1 + 2.0*c_2) + " QL2-Bi1p-C\n")
+        f.write("0.333333 0.666667 " + str(n*c_hex + 2.0*c_vdw + 2.0*c_ql + c_1) + " QL3-Bi1-C\n")
+        f.write("0.666667 0.333333 " + str(n*c_hex + 2.0*c_vdw + 2.0*c_ql + c_1 + 2.0*c_2) + " QL3-Bi1p-B\n")
+    for n in range(N3QL): 
+        f.write("0.0 0.0 " + str(n*c_hex) + " QL1-Se1-A\n")
+        f.write("0.333333 0.666667 " + str(n*c_hex + c_1 + c_2) + " QL1-Se2-C\n")
+        f.write("0.666667 0.333333 " + str(n*c_hex + c_ql) + " QL1-Se1p-B\n")
+        f.write("0.333333 0.666667 " + str(n*c_hex + c_vdw + c_ql) + " QL2-Se1-C\n")
+        f.write("0.666667 0.333333 " + str(n*c_hex + c_vdw + c_ql + c_1 + c_2) + " QL2-Se2-B\n")
+        f.write("0.0 0.0 " + str(n*c_hex + c_vdw + 2.0*c_ql) + " QL2-Se1p-A\n")
+        f.write("0.666667 0.333333 " + str(n*c_hex + 2.0*c_vdw + 2.0*c_ql) + " QL3-Se1-B\n")
+        f.write("0.0 0.0 " + str(n*c_hex + 2.0*c_vdw + 2.0*c_ql + c_1 + c_2) + " QL3-Se2-A\n")
+        f.write("0.333333 0.666667 " + str(n*c_hex + 2.0*c_vdw + 3.0*c_ql) + " QL3-Se1p-C\n")
+
+def writeRhombPOSCAR(f):
+    header = "Bi2Se3 rhombohedral cell: " + str(N3QL) + "x15 layers; vacuum " + str(c_vac_abs) + " Angstroms\n"
+    f.write(header)
+    # write lattice basis
+    f.write(str(a_hex_abs) + "\n")          # lattice parameter (scale)
+    cta = str(c_t_abs / a_hex_abs)
+    f.write("0.5 -0.28867513459481288225 " + cta + "\n")   # t_1
+    f.write("0.0 0.577350269189625764509 " + cta + "\n")    # t_2
+    f.write("-0.5 -0.28867513459481288225 " + cta + "\n")    # t_3
+    # number of Bi/Se atoms
+    f.write(str(2*N3QL) + " " + str(3*N3QL) + "\n") 
+    # direct coordinates (atom positions given in lattice basis)
+    f.write("Direct\n") 
+
+    layerLabels = ["QL1-Bi1p-A", "QL2-Bi1-A", "QL1-Se1-A", "QL2-Se1p-A", "QL3-Se2-A"]
+    # c-axis positions: layer 4, 7, 1, 10, 13
+    coords = [(c_1 + 2.0*c_2)/c_hex, (c_t + c_1)/c_hex, 0.0, (c_t + 2.0*c_1 + 2.0*c_2)/c_hex, (2.0*c_t + c_1 + c_2)/c_hex]
+    # atom positions
+    # N3QL = 1 only - TODO generalize? make sure to keep Bi at top and Se below Bi
+    for label, coord in zip(layerLabels, coords):
+        allCoords = str(coord) + " " + str(coord) + " " + str(coord)
+        f.write(allCoords + " " + label + "\n")
+
+if __name__ == "__main__":
+    main()

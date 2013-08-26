@@ -1,0 +1,6 @@
+POSCAR
+PROCAR
+EIGENVAL
+OUTCAR
+*.swp
+*.pyc
