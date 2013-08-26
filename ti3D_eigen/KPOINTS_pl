@@ -1,0 +1,9 @@
+K-points kx, ky
+25
+line mode
+reciprocal
+0.0 0.0 0.0
+0.5 0.0 0.0
+
+0.0 0.0 0.0
+0.0 0.5 0.0

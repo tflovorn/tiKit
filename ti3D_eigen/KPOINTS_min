@@ -1,0 +1,6 @@
+Minimal K-points kx
+100
+line mode
+reciprocal
+0.0 0.0 0.0
+0.2 0.0 0.0
