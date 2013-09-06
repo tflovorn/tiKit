@@ -1,0 +1,36 @@
+SYSTEM=Bi2Se3
+#ICHARG=11 # when ICHARG=11, use previously-generated charge density
+PREC=High
+ENCUT=340.00 eV # 400eV from Romanowich(2012); default: largest ENMAX in POTCAR
+SIGMA=0.05 # "as large as possible but the difference between the free energy and the total energy ('entropy T*S' in OUTCAR) should be negligible"
+ISMEAR=1      #  method for calculating density of states -5 (tetrahedron) 0 (Gaussian) 1 Methfessel-Paxton
+#ISPIND=2 # must be 2 for ISPIN=2 to have effect (but "not to be read from the INCAR file" vasp-forum/...?3.3037, so comment this out?)
+#ISPIN=2 # 1: non-spin-polarized; 2: spin polarized; default 1
+#VOSKOWN=1 # set to 1 if using PW91 functional; otherwise 0; default 0
+LWAVE=.FALSE. # set to .TRUE. to generate orbital file (very large~200MB); default TRUE
+LCHARG=.TRUE. # set to .TRUE. to generate charge density file; default TRUE
+#RWIGS=1.45 1.45 # control radius, Wigner-Seitz radius; default=RCORE
+EMIN=-2 # min energy for evaluation of DOS
+EMAX=8 # max energy for evaluation of DOS
+NEDOS=1001 # number of grid points in DOS
+NPAR=8
+NGX=59
+NGY=59
+NGZ=59
+EDIFF=1.0E-4
+#LORBIT=11 # make lm-decomposed PROCAR
+#NSW=0 # number of ionic steps: default=0 --> don't relax
+AMIN=0.01 # recommended for better convergence of sc calculation with a large cell
+
+#LSORBIT=.TRUE. # true --> spin-orbit coupling on
+#SAXIS=0 0 1 # spin quantization axis; default = (0+,0,1)
+#GGA_COMPAT=.FALSE. # "apply spherical cutoff on gradient field": recommended FALSE for accuracy better than 1meV on non-collinear runs
+
+# added after run 203768:
+# VASP manual recommends these parameters to possibly speed up calculations
+# on "slabs, magnetic systems, and insulating systems".
+# "'linear mixing' can result in faster convergence than the Kerker model function"
+AMIX=0.2
+BMIX=0.0001
+AMIX_MAG=0.8
+BMIX_MAG=0.0001
