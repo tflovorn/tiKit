@@ -34,7 +34,7 @@ if len(sys.argv) != 3:
     print(usageStr)
     sys.exit(2)
 
-# number of 15-layer cells (3x quintuple layers)
+# number of 5-layer cells (quintuple layers)
 N5L = int(sys.argv[1])
 if N5L < 1:
     print(usageStr)
