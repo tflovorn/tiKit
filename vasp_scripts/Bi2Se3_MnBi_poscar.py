@@ -141,18 +141,18 @@ def writeHexPOSCAR(f):
     for n in range(NBi):
         if n % 2 == 0:
             if alignBi == "B":
-                f.write("0.666667 0.333333 " + str(Bi_offset + 0.5*n*c_hex) + " Bi1-B\n")
+                f.write("0.666667 0.333333 " + str(Bi_offset + 0.5*n*MnBi_c_hex) + " Bi1-B\n")
             if alignBi == "C":
-                f.write("0.333333 0.666667 " + str(Bi_offset + 0.5*n*c_hex) + " Bi1-C\n")
+                f.write("0.333333 0.666667 " + str(Bi_offset + 0.5*n*MnBi_c_hex) + " Bi1-C\n")
             if alignBi == "A":
-                f.write("0.0 0.0 " + str(Bi_offset + 0.5*n*c_hex) + " Bi1-A\n")
+                f.write("0.0 0.0 " + str(Bi_offset + 0.5*n*MnBi_c_hex) + " Bi1-A\n")
         else:
             if alignBi == "B":
-                f.write("0.333333 0.666667 " + str(Bi_offset + 0.5*n*c_hex) + " Bi1-C\n")
+                f.write("0.333333 0.666667 " + str(Bi_offset + 0.5*n*MnBi_c_hex) + " Bi1-C\n")
             if alignBi == "C":
-                f.write("0.0 0.0 " + str(Bi_offset + 0.5*n*c_hex) + " Bi1-A\n")
+                f.write("0.0 0.0 " + str(Bi_offset + 0.5*n*MnBi_c_hex) + " Bi1-A\n")
             if alignBi == "A":
-                f.write("0.666667 0.333333 " + str(Bi_offset + 0.5*n*c_hex) + " Bi1-B\n")
+                f.write("0.666667 0.333333 " + str(Bi_offset + 0.5*n*MnBi_c_hex) + " Bi1-B\n")
     # atom positions: Se in Bi2Se3 layers
     ql_state = 1
     for n in range(N5L):
@@ -177,11 +177,11 @@ def writeHexPOSCAR(f):
     alignMn = interfaceLayerAlignment("Mn")
     for n in range(NMn):
         if alignMn == "B":
-            f.write("0.666667 0.333333 " + str(Mn_offset + 0.5*n*c_hex) + " Mn1-B\n")
+            f.write("0.666667 0.333333 " + str(Mn_offset + 0.5*n*MnBi_c_hex) + " Mn1-B\n")
         if alignMn == "C":
-            f.write("0.333333 0.666667 " + str(Mn_offset + 0.5*n*c_hex) + " Mn1-C\n")
+            f.write("0.333333 0.666667 " + str(Mn_offset + 0.5*n*MnBi_c_hex) + " Mn1-C\n")
         if alignMn == "A":
-            f.write("0.0 0.0 " + str(Mn_offset + 0.5*n*c_hex) + " Mn1-A\n")
+            f.write("0.0 0.0 " + str(Mn_offset + 0.5*n*MnBi_c_hex) + " Mn1-A\n")
 
 # calculate number of Mn and Bi atoms in MnBi
 def numMnBi():
