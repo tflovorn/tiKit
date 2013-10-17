@@ -235,6 +235,7 @@ Available options:
     -2  Select only the second spin.
     -0  Select all spins.
     (-0 is the same as -1 if there is only one spin in the input file).
+    -S "G K M ..."  List of symmetry points to display on x axis.
 
 Available formats:
     gnuplot
@@ -259,10 +260,16 @@ def getArgs():
     # Defaults.
     relax = 0
     spin = 1
+    # arg parser state
+    just_saw_S = False
+
 
     for i in range(1, len(sys.argv)):
         arg = sys.argv[i]
-        if arg[0] == '-':
+        if just_saw_S:
+            symPoints = arg
+            just_saw_S = False
+        elif arg[0] == '-':
             for c in arg[1:]:
                 if c == "r":
                     relax = 1
@@ -272,6 +279,8 @@ def getArgs():
                     spin = 2
                 elif c == "0":
                     spin = 0
+                elif c == "S":
+                    just_saw_S = True
         else:
             break
 
@@ -280,14 +289,14 @@ def getArgs():
     except:
         return [], False
 
-    return [relax, spin, in_path, format, out_name], True
+    return [relax, spin, symPoints, in_path, format, out_name], True
 
 def main():
     args, ok = getArgs()
     if not ok:
         print usage
         sys.exit(2)
-    relax, spin, in_path, format, out_name = args
+    relax, spin, symPoints, in_path, format, out_name = args
 
     status('Reading "%s"\n' % in_path)
     e = EIGENVAL(in_path)
