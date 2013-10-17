@@ -252,10 +252,9 @@ Examples:
           gnuplot on it, generating "R.png".
 """
 
-def main():
+def getArgs():
     if len(sys.argv) == 1:
-        print usage
-        return
+        return [], False
 
     # Defaults.
     relax = 0
@@ -279,8 +278,16 @@ def main():
     try:
         (in_path, format, out_name) = sys.argv[i:]
     except:
+        return [], False
+
+    return [relax, spin, in_path, format, out_name], True
+
+def main():
+    args, ok = getArgs()
+    if not ok:
         print usage
-        return
+        sys.exit(2)
+    relax, spin, in_path, format, out_name = args
 
     status('Reading "%s"\n' % in_path)
     e = EIGENVAL(in_path)
