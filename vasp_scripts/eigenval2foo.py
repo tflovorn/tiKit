@@ -88,9 +88,12 @@ class EIGENVAL:
 
         self.kpoints = []
         self.weights = []
+        self.symIndices = [0]
 
         k_record_size = 2 + num_bands
 
+        count = 0       # number of k-points recorded
+        lastK = None    # last k-point seen
         for k in range(num_k):
             # k-record structure:
             # 1 blank line.
@@ -98,16 +101,26 @@ class EIGENVAL:
             # num_bands band lines.
             o = 6 + k * k_record_size # o = line number for start of current k-record
 
-            a = map(float, lines[o + 1].split()) # o+1 --> k-point line (skip blank line)
+            aStr = lines[o + 1].split() # o+1 --> k-point line (skip blank line)
+            a = map(float, aStr)
 
-            self.kpoints.append(tuple(a[:3]))
-            self.weights.append(a[3])
+            thisK = tuple(aStr[:3])
+            # if a k-point repeats, it is a symmetry point: don't record it,
+            # but do mark the location of it
+            if lastK is not None and thisK == lastK:
+                self.symIndices.append(count)
+            else:
+                self.kpoints.append(tuple(a[:3]))
+                self.weights.append(a[3])
+                count += 1
+                for b in range(num_bands):
+                    p = map(float, lines[o + 2 + b].split()[1:])
 
-            for b in range(num_bands):
-                p = map(float, lines[o + 2 + b].split()[1:])
-
-                for s in range(num_spins):
-                    self.points[s][b].append(p[s])
+                    for s in range(num_spins):
+                        self.points[s][b].append(p[s])
+            lastK = thisK
+        if count != 0:
+            self.symIndices.append(count)
 
     def getNumSpins(self):
         return len(self.points)
@@ -235,7 +248,7 @@ Available options:
     -2  Select only the second spin.
     -0  Select all spins.
     (-0 is the same as -1 if there is only one spin in the input file).
-    -S "G K M ..."  List of symmetry points to display on x axis.
+    -S "Gamma K M ..." Display the provided symmetry points on x axis.
 
 Available formats:
     gnuplot
@@ -260,6 +273,7 @@ def getArgs():
     # Defaults.
     relax = 0
     spin = 1
+    symPoints = []
     # arg parser state
     just_saw_S = False
 
@@ -363,20 +377,28 @@ def main():
         dat_path = out_name + '.dat'
 
         outf = open(dat_path, "w")
-        status('Writting "%s"\n' % dat_path)
+        status('Writing "%s"\n' % dat_path)
         for row in B:
             print >> outf, "\t".join(map(str, row))
         outf.close()
 
         plot_path = out_name + '.plt'
-        status('Writting "%s"\n' % plot_path)
+        status('Writing "%s"\n' % plot_path)
         poutf = open(plot_path, 'w')
 
     #   print >> poutf, "set terminal png"
     #   print >> poutf, "set output '%s.png'" % out_name
-        out_pic_name = out_name + '.ps'
-        print >> poutf, "set terminal postscript"
+        #TODO? adjustable output format? issues with eps bounding box
+        out_pic_name = out_name + '.png'
+        #TODO? adjustable size
+        print >> poutf, "set terminal pngcairo enhanced size 1280,1024"
         print >> poutf, "set output '%s'" % out_pic_name
+
+        # set label "{/Symbol G}" at 2,0 <-- write Gamma at x=2, y=0
+        # better:
+        # set xtics ("{/Symbol G}" 0, "M" 0.2, "K" 0.6, "{/Symbol G}" 1.0)
+        # set arrow from 0.2,(min y) to 0.2,(max y) nohead
+        #TODO? adjustable (min y, max y)
 
     #   print >> poutf, gnuplot_script_old
         print >> poutf, gnuplot_script
@@ -395,8 +417,8 @@ def main():
 
         status('Generating "%s"\n' % out_pic_name)
         os.system('gnuplot "%s"' % plot_path)
-        status('Generating "%s.pdf"\n' % out_name)
-        os.system('ps2pdf "%s"' % out_pic_name)
+        #status('Generating "%s.pdf"\n' % out_name)
+        #os.system('ps2pdf "%s"' % out_pic_name)
         return
 
     elif format == "csv":
@@ -405,7 +427,7 @@ def main():
         import csv
 
         outf = open(out_name + '.csv', "w")
-        status('Writting "%s"\n' % out_name)
+        status('Writing "%s"\n' % out_name)
 
         writer = csv.writer(outf)
         for row in B:
