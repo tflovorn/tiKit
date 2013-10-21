@@ -272,6 +272,7 @@ Examples:
           gnuplot on it, generating "R.png".
 """
 
+# parse command-line arguments
 def getArgs():
     if len(sys.argv) == 1:
         return [], False
@@ -281,9 +282,11 @@ def getArgs():
     spin = 1
     symPoints = []
     yBounds = []
+    outcar_path = ""
     # arg parser state
     just_saw_S = False
     just_saw_Y = False
+    just_saw_C = False
 
     for i in range(1, len(sys.argv)):
         arg = sys.argv[i]
@@ -293,6 +296,9 @@ def getArgs():
         elif just_saw_Y:
             yBounds = arg.split()
             just_saw_Y = False
+        elif just_saw_C:
+            outcar_path = arg
+            just_saw_C = False
         elif arg[0] == '-':
             for c in arg[1:]:
                 if c == "r":
@@ -307,6 +313,8 @@ def getArgs():
                     just_saw_S = True
                 elif c == "Y":
                     just_saw_Y = True
+                elif c == "C":
+                    just_saw_C = True
         else:
             break
 
@@ -315,21 +323,54 @@ def getArgs():
     except:
         return [], False
 
-    return [relax, spin, symPoints, yBounds, in_path, format, out_name], True
+    return [relax, spin, symPoints, yBounds, outcar_path, in_path, format, out_name], True
+
+# Get relevant data from OUTCAR file:
+# E-fermi to draw a line through Fermi energy, reciprocal lattice vectors
+# to scale ranges between symmetry points.
+def parseOutcar(outcar_path):
+    outcar = open(outcar_path, 'r').readlines()
+    # get Fermi energy
+    E_fermi  = 0.0
+    for line in outcar:
+        if "E-fermi" in line:
+            ls = line.split()
+            E_fermi = float(ls[2])
+            break
+    # get reciprocal lattice vectors
+    recip_lat = []
+    for i in range(len(outcar)):
+        line = outcar[i]
+        if "reciprocal lattice vectors" in line:
+            for j in range(3):
+                rv_line = outcar[i+j+1].split()
+                rv = tuple(map(float, rv_line[3:]))
+                recip_lat.append(rv)
+            break
+    return E_fermi, recip_lat
 
 def main():
+    # parse arguments
     args, ok = getArgs()
     if not ok:
         print usage
         sys.exit(2)
-    relax, spin, symPoints, yBounds, in_path, format, out_name = args
-    
+    relax, spin, symPoints, yBounds, outcar_path, in_path, format, out_name = args
+
+    # obtain band data from EIGENVAL file
     status('Reading "%s"\n' % in_path)
     e = EIGENVAL(in_path)
 
+    # determine lowest and highest energies to display
     ymin, ymax = e.minEnergy, e.maxEnergy
     if len(yBounds) >= 2:
         ymin, ymax = float(yBounds[0]), float(yBounds[1])
+
+    # get Fermi energy and reciprocal lattice vectors from OUTCAR
+    E_fermi = None
+    recip_lat = []
+    if outcar_path != "":
+        E_fermi, recip_lat = parseOutcar(outcar_path)
 
     # Handle spin and relaxation interactions.
     if spin == 0 and e.getNumSpins() == 1:
@@ -367,7 +408,9 @@ def main():
     M = len(A)
     N = len(A[0])
 
-#   X = e.projectKpoints()
+    # set X-axis coordinates
+    # TODO? - option to enable X-axis coord = |k|?
+    # X = e.projectKpoints()
     step = 1.0 / float(N - 1)
     X = map(lambda x, s=step: x * s, range(N))
 
@@ -402,9 +445,7 @@ def main():
         status('Writing "%s"\n' % plot_path)
         poutf = open(plot_path, 'w')
 
-    #   print >> poutf, "set terminal png"
-    #   print >> poutf, "set output '%s.png'" % out_name
-        #TODO? adjustable output format? issues with eps bounding box
+        #TODO? - adjustable output format? issues with eps bounding box
         out_pic_name = out_name + '.png'
         print >> poutf, "set terminal pngcairo enhanced size 1280,1024"
         print >> poutf, "set output '%s'" % out_pic_name
@@ -428,9 +469,6 @@ def main():
                     xticsArg += ")"
             print >> poutf, 'set xtics ' + xticsArg
 
-        #TODO? adjustable (min y, max y)
-
-    #   print >> poutf, gnuplot_script_old
         print >> poutf, gnuplot_script
 
         print >> poutf, "unset key"
@@ -447,8 +485,11 @@ def main():
 
         status('Generating "%s"\n' % out_pic_name)
         os.system('gnuplot "%s"' % plot_path)
+
+        #TODO? - could re-enable pdf for eps output
         #status('Generating "%s.pdf"\n' % out_name)
         #os.system('ps2pdf "%s"' % out_pic_name)
+
         return
 
     elif format == "csv":
