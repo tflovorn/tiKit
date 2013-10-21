@@ -106,13 +106,13 @@ class EIGENVAL:
             aStr = lines[o + 1].split() # o+1 --> k-point line (skip blank line)
             a = map(float, aStr)
 
-            thisK = tuple(aStr[:3])
+            thisK = map(float, tuple(aStr[:3]))
             # if a k-point repeats, it is a symmetry point: don't record it,
             # but do mark the location of it
-            if lastK is not None and thisK == lastK:
+            if lastK is not None and vec_len(vec_sub(thisK, lastK)) < 1e-9:
                 self.symIndices.append(count-1)
             else:
-                self.kpoints.append(tuple(a[:3]))
+                self.kpoints.append(map(float, tuple(a[:3])))
                 self.weights.append(a[3])
                 count += 1
                 for b in range(num_bands):
@@ -349,6 +349,31 @@ def parseOutcar(outcar_path):
             break
     return E_fermi, recip_lat
 
+# Scale X-axis coordinates according to distance between symmetry points.
+def symPointXScaling(e, recip_lat):
+    # get distances between symmetry points
+    d = []
+    for i in range(len(e.symIndices)-1):
+        v0 = e.kpoints[e.symIndices[i]]
+        v0_cart = vec_change_basis(v0, recip_lat)
+        v1 = e.kpoints[e.symIndices[i+1]]
+        v1_cart = vec_change_basis(v1, recip_lat)
+        d.append(vec_len(vec_sub(v1_cart, v0_cart)))
+    S = sum(d)
+    # make X-axis coordinates
+    X = []
+    start = 0.0
+    for i in range(len(d)):
+        N = e.symIndices[i+1] - e.symIndices[i]
+        # eliminating doubled symmetry points causes one interval to be
+        # longer: choose first interval for this
+        if i == 0:
+            N += 1
+        step = d[i] / (S * (float(N)-1.0))
+        X.extend(map(lambda x: x*step + start, range(N)))
+        start += d[i] / S
+    return X
+
 def main():
     # parse arguments
     args, ok = getArgs()
@@ -413,6 +438,8 @@ def main():
     # X = e.projectKpoints()
     step = 1.0 / float(N - 1)
     X = map(lambda x, s=step: x * s, range(N))
+    if len(symPoints) > 0:
+        X = symPointXScaling(e, recip_lat)
 
     # A is a list of curves, which are lists of points.
     # ---> A follows the order of points in KPOINTS/EIGENVAL
@@ -517,6 +544,25 @@ gnuplot_script = r"""
 set style data linespoints
 set style function lines
 """
+
+def vec_len(v):
+    return math.sqrt(v[0]**2 + v[1]**2 + v[2]**2)
+
+def vec_mul(v, s):
+    return tuple([s*v[0], s*v[1], s*v[2]])
+
+def vec_add(u, v):
+    return tuple([u[0] + v[0], u[1] + v[1], u[2] + v[2]])
+
+def vec_sub(u, v):
+    return tuple([u[0] - v[0], u[1] - v[1], u[2] - v[2]])
+
+def vec_change_basis(v, b):
+    x = []
+    for i in range(3):
+        x.append(vec_mul(b[i], v[i]))
+    return vec_add(vec_add(x[0], x[1]), x[2])
+
 # ====================================================================== #
 
 if __name__ == "__main__":
