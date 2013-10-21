@@ -108,7 +108,7 @@ class EIGENVAL:
             # if a k-point repeats, it is a symmetry point: don't record it,
             # but do mark the location of it
             if lastK is not None and thisK == lastK:
-                self.symIndices.append(count)
+                self.symIndices.append(count-1)
             else:
                 self.kpoints.append(tuple(a[:3]))
                 self.weights.append(a[3])
@@ -120,7 +120,7 @@ class EIGENVAL:
                         self.points[s][b].append(p[s])
             lastK = thisK
         if count != 0:
-            self.symIndices.append(count)
+            self.symIndices.append(count-1)
 
     def getNumSpins(self):
         return len(self.points)
