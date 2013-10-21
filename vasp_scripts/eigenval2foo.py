@@ -21,6 +21,7 @@ import os
 import sys
 import math
 import string
+import symbolGreekGnuplot
 
 # ====================================================================== #
 # Status
@@ -89,7 +90,8 @@ class EIGENVAL:
         self.kpoints = []
         self.weights = []
         self.symIndices = [0]
-
+        self.minEnergy = 1e9
+        self.maxEnergy = -1e9
         k_record_size = 2 + num_bands
 
         count = 0       # number of k-points recorded
@@ -117,6 +119,10 @@ class EIGENVAL:
                     p = map(float, lines[o + 2 + b].split()[1:])
 
                     for s in range(num_spins):
+                        if p[s] > self.maxEnergy:
+                            self.maxEnergy = p[s]
+                        if p[s] < self.minEnergy:
+                            self.minEnergy = p[s]
                         self.points[s][b].append(p[s])
             lastK = thisK
         if count != 0:
@@ -274,15 +280,19 @@ def getArgs():
     relax = 0
     spin = 1
     symPoints = []
+    yBounds = []
     # arg parser state
     just_saw_S = False
-
+    just_saw_Y = False
 
     for i in range(1, len(sys.argv)):
         arg = sys.argv[i]
         if just_saw_S:
-            symPoints = arg
+            symPoints = arg.split()
             just_saw_S = False
+        elif just_saw_Y:
+            yBounds = arg.split()
+            just_saw_Y = False
         elif arg[0] == '-':
             for c in arg[1:]:
                 if c == "r":
@@ -295,6 +305,8 @@ def getArgs():
                     spin = 0
                 elif c == "S":
                     just_saw_S = True
+                elif c == "Y":
+                    just_saw_Y = True
         else:
             break
 
@@ -303,17 +315,21 @@ def getArgs():
     except:
         return [], False
 
-    return [relax, spin, symPoints, in_path, format, out_name], True
+    return [relax, spin, symPoints, yBounds, in_path, format, out_name], True
 
 def main():
     args, ok = getArgs()
     if not ok:
         print usage
         sys.exit(2)
-    relax, spin, symPoints, in_path, format, out_name = args
-
+    relax, spin, symPoints, yBounds, in_path, format, out_name = args
+    
     status('Reading "%s"\n' % in_path)
     e = EIGENVAL(in_path)
+
+    ymin, ymax = e.minEnergy, e.maxEnergy
+    if len(yBounds) >= 2:
+        ymin, ymax = float(yBounds[0]), float(yBounds[1])
 
     # Handle spin and relaxation interactions.
     if spin == 0 and e.getNumSpins() == 1:
@@ -390,14 +406,28 @@ def main():
     #   print >> poutf, "set output '%s.png'" % out_name
         #TODO? adjustable output format? issues with eps bounding box
         out_pic_name = out_name + '.png'
-        #TODO? adjustable size
         print >> poutf, "set terminal pngcairo enhanced size 1280,1024"
         print >> poutf, "set output '%s'" % out_pic_name
+        print >> poutf, "set yrange[" + str(ymin) + ":" + str(ymax) + "]"
 
-        # set label "{/Symbol G}" at 2,0 <-- write Gamma at x=2, y=0
-        # better:
-        # set xtics ("{/Symbol G}" 0, "M" 0.2, "K" 0.6, "{/Symbol G}" 1.0)
-        # set arrow from 0.2,(min y) to 0.2,(max y) nohead
+        # if symmetry points are specified, use them to label x axis
+        if len(symPoints) > 0:
+            xticsArg = '('
+            for i in range(len(symPoints)):
+                xval = X[e.symIndices[i]]
+                vl = 'set arrow from ' + str(xval) + ',' + str(ymin) + ' to ' + str(xval) + ',' + str(ymax) + 'nohead'
+                print >> poutf, vl
+                symbol = symbolGreekGnuplot.Convert(symPoints[i])
+                if symbol is not None:
+                    xticsArg += '"' + symbol + '" ' + str(xval)
+                else:
+                    xticsArg += '"' + symPoints[i] + '" ' + str(xval)
+                if i < len(symPoints) - 1:
+                    xticsArg += ", "
+                else:
+                    xticsArg += ")"
+            print >> poutf, 'set xtics ' + xticsArg
+
         #TODO? adjustable (min y, max y)
 
     #   print >> poutf, gnuplot_script_old

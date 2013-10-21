@@ -58,4 +58,7 @@ symbolsDict = {}
 __setup()
 
 def Convert(name):
-    return symbolsDict[name]
+    if name in symbolsDict:
+        return symbolsDict[name]
+    else:
+        return None
