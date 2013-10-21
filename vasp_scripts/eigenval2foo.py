@@ -254,7 +254,15 @@ Available options:
     -2  Select only the second spin.
     -0  Select all spins.
     (-0 is the same as -1 if there is only one spin in the input file).
-    -S "Gamma K M ..." Display the provided symmetry points on x axis.
+
+    -S "[symPoints]" (ex.: -S "Gamma Z F Gamma L"): Display the provided
+            symmetry points on x axis.
+    -C "[outcar_path]" (ex.: -C "OUTCAR"): specify OUTCAR file path to get
+            Fermi energy and reciprocal lattice vectors for scaling. To
+            obtain the correct Fermi energy, the OUTCAR should be from the
+            self-consistent charge density calculation.
+    -Y "[yMin] [yMax]" (ex.: -Y "2.25 6.25"): Set lower and upper bounds
+            for the y axis.
 
 Available formats:
     gnuplot
@@ -386,16 +394,18 @@ def main():
     status('Reading "%s"\n' % in_path)
     e = EIGENVAL(in_path)
 
-    # determine lowest and highest energies to display
-    ymin, ymax = e.minEnergy, e.maxEnergy
-    if len(yBounds) >= 2:
-        ymin, ymax = float(yBounds[0]), float(yBounds[1])
-
     # get Fermi energy and reciprocal lattice vectors from OUTCAR
     E_fermi = None
     recip_lat = []
     if outcar_path != "":
         E_fermi, recip_lat = parseOutcar(outcar_path)
+    print "E-fermi is " + str(E_fermi)
+
+    # determine lowest and highest energies to display
+    E_fermi_rel = E_fermi   # may want to set energies relative to Fermi level - if so then E_fermi_rel = 0.0
+    ymin, ymax = e.minEnergy, e.maxEnergy
+    if len(yBounds) >= 2:
+        ymin, ymax = float(yBounds[0]), float(yBounds[1])
 
     # Handle spin and relaxation interactions.
     if spin == 0 and e.getNumSpins() == 1:
@@ -476,14 +486,16 @@ def main():
         out_pic_name = out_name + '.png'
         print >> poutf, "set terminal pngcairo enhanced size 1280,1024"
         print >> poutf, "set output '%s'" % out_pic_name
+        #print >> poutf, 'set ylabel "Energy (eV)"'
         print >> poutf, "set yrange[" + str(ymin) + ":" + str(ymax) + "]"
+        print >> poutf, "set arrow from 0.0," + str(E_fermi_rel) + " to 1.0," + str(E_fermi_rel) + " nohead"
 
         # if symmetry points are specified, use them to label x axis
         if len(symPoints) > 0:
             xticsArg = '('
             for i in range(len(symPoints)):
                 xval = X[e.symIndices[i]]
-                vl = 'set arrow from ' + str(xval) + ',' + str(ymin) + ' to ' + str(xval) + ',' + str(ymax) + 'nohead'
+                vl = 'set arrow from ' + str(xval) + ',' + str(ymin) + ' to ' + str(xval) + ',' + str(ymax) + ' nohead'
                 print >> poutf, vl
                 symbol = symbolGreekGnuplot.Convert(symPoints[i])
                 if symbol is not None:
