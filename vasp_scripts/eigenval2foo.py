@@ -366,7 +366,8 @@ def symPointXScaling(e, recip_lat):
         v0_cart = vec_change_basis(v0, recip_lat)
         v1 = e.kpoints[e.symIndices[i+1]]
         v1_cart = vec_change_basis(v1, recip_lat)
-        d.append(vec_len(vec_sub(v1_cart, v0_cart)))
+        dist = vec_len(vec_sub(v1_cart, v0_cart))
+        d.append(dist)
     S = sum(d)
     # make X-axis coordinates
     X = []
@@ -375,10 +376,21 @@ def symPointXScaling(e, recip_lat):
         N = e.symIndices[i+1] - e.symIndices[i]
         # eliminating doubled symmetry points causes one interval to be
         # longer: choose first interval for this
+        step = 0.0
         if i == 0:
             N += 1
-        step = d[i] / (S * (float(N)-1.0))
-        X.extend(map(lambda x: x*step + start, range(N)))
+            step = d[i] / (S * (float(N) - 1.0))
+        if i != 0:
+            start += step
+            step = d[i] / (S * float(N))
+        # extra step to prevent this interval's start from being the
+        # same as the last element of the previous interval
+        if i == 0:
+            ns = map(lambda x: x*step + start, range(N))
+            X.extend(ns)
+        else:
+            ns = map(lambda x: x*step + start, range(1, N+1))
+            X.extend(ns)
         start += d[i] / S
     return X
 
