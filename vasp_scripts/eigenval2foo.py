@@ -518,7 +518,7 @@ def main():
                     xticsArg += ", "
                 else:
                     xticsArg += ")"
-            print >> poutf, 'set xtics ' + xticsArg
+            print >> poutf, 'set xtics ' + xticsArg + ' font ",20"'
 
         print >> poutf, gnuplot_script
 
