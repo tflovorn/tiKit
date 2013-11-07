@@ -24,17 +24,21 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import parseProcar, surface
 
-def PlotBands(procar):
+def PlotBands(procar, sizeWeight=True):
     # Iterate over bands to collect data.
     for i in range(1, procar.Nb+1):
         # Iterate over k-points to build (kx, energy) pairs for this band.
         # Entries in surface are 0 (bulk states) or 1 (surface states).
         # surface controls the color of the markers.
-        kx, energy, surface = [], [], []
+        kx, energy, surface, topSize, bottomSize = [], [], [], [], []
         for k in procar.kPoints:
             kx.append(k.kx)
             b = k.Band(i)
             energy.append(b.energy)
+            topSize.append(100.0*max(b.top))
+            bottomSize.append(100.0*max(b.bottom))
+            white = cm.gray(0.99)
+            black = cm.gray(0.0)
             if hasattr(b, 'surface') and b.surface:
                 print(str(k.kx) + " " + str(i))
                 surface.append(cm.gray(0.0))
@@ -42,9 +46,17 @@ def PlotBands(procar):
                 surface.append(cm.gray(0.99))
         # plot band as thin green line (to clarify connection btwn markers)
         plt.plot(kx, energy, 'g-', linewidth=1)
-        # plot band as markers: bulk -> white, surface -> black
-        plt.scatter(kx, energy, facecolors=surface, edgecolor='b',
-                    marker='o', cmap=cm.gray, linewidth=1, s=50)
+        if sizeWeight:
+            # plot band as markers sized by their surface weight:
+            # top surface -> white, bottom surface -> black
+            plt.scatter(kx, energy, facecolors=white, edgecolor='b',
+                        marker='o', cmap=cm.gray, linewidth=1, s=topSize)
+            plt.scatter(kx, energy, facecolors=black, edgecolor='b',
+                        marker='o', cmap=cm.gray, linewidth=1, s=bottomSize)
+        else:
+            # plot band as markers: bulk -> white, surface -> black
+            plt.scatter(kx, energy, facecolors=surface, edgecolor='b',
+                        marker='o', cmap=cm.gray, linewidth=1, s=50)
 
     # Display the plot
     plt.show()
@@ -56,5 +68,5 @@ if __name__ == "__main__":
     procar = None
     with open(procarFileName, 'r') as f:
         procar = parseProcar.PROCAR(f, nonCol=True, lmDecomposed=True, storeIds=True)
-    surface.MarkSurfaceStates(procar, 5, 0.70)
-    PlotBands(procar)
+    surface.MarkSurfaceStates(procar, 1, 0.99, strategy="SumSquare")
+    PlotBands(procar, sizeWeight=True)

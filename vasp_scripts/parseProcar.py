@@ -118,6 +118,9 @@ class Band(object):
         for tableId in range(1, numTables+1):
             # Extract table data.
             self.tables.append(IonTable(procarFile, procar, tableId))
+        # top/bottom surface weights
+        self.top = []
+        self.bottom = []
 
     # Return data for the table with id given by tableId in the PROCAR file
     # format (the first id is 1, not 0).
@@ -179,6 +182,9 @@ class IonTotalOnly(object):
         # each entry in the line is always separated by spaces
         l = procarFile.readline().strip().split()
         self.tot = float(l[10])
+
+    def SquareSum(self):
+        return self.tot*self.tot
 
 if __name__ == "__main__":
     # test - TODO arguments?

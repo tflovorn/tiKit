@@ -51,7 +51,10 @@ def MarkSurfaceStates(procar, depth, threshold, strategy='SumSquare'):
         for band in kPoint.bands:
             marked = False
             for table in band.tables:
-                if IsSurface(table, depth, threshold, strategy):
+                isSurf, top, bottom = IsSurface(table, depth, threshold, strategy)
+                band.top.append(top)
+                band.bottom.append(bottom)
+                if isSurf:
                     table.surface = True
                     marked = True
                 else:
@@ -66,7 +69,7 @@ def MarkSurfaceStates(procar, depth, threshold, strategy='SumSquare'):
 def IsSurface(table, depth, threshold, strategy):
     if strategy not in ['SumSquare', 'Sum']:
         print("error: invalid strategy")
-        return False
+        return False, 0.0, 0.0
     Ni = len(table.ions)
     sumTop, sumBottom, sumAll = 0.0, 0.0, 0.0
     # iterate over ions close to the top/bottom
@@ -87,16 +90,16 @@ def IsSurface(table, depth, threshold, strategy):
     # note that sum(Top, Bottom, All) >= 0
     if sumAll < 1e-9:
         # total weight too small; assume not surface state
-        return False
-    if sumTop/sumAll > threshold or sumBottom/sumAll > threshold:
+        return False, 0.0, 0.0
+    if abs(sumTop/sumAll) > threshold or abs(sumBottom/sumAll) > threshold:
         # seems to be a surface state
         print('top: ' + str(sumTop) + ' bottom: ' + str(sumBottom) + ' total: ' + str(sumAll))
-        return True
+        return True, abs(sumTop/sumAll), abs(sumBottom/sumAll)
     # not above threshold
-    return False
+    return False, abs(sumTop/sumAll), abs(sumBottom/sumAll)
 
 if __name__ == "__main__":
     # test - TODO arguments?
     with open('PROCAR', 'r') as f:
-        procar = parseProcar.PROCAR(f, nonCol=True, lmDecomposed=False, storeIds=True)
+        procar = parseProcar.PROCAR(f, nonCol=True, lmDecomposed=True, storeIds=True)
         MarkSurfaceStates(procar, 3, 0.99)
