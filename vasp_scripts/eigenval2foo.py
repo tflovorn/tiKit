@@ -500,7 +500,8 @@ def main():
         print >> poutf, "set output '%s'" % out_pic_name
         #print >> poutf, 'set ylabel "Energy (eV)"'
         print >> poutf, "set yrange[" + str(ymin) + ":" + str(ymax) + "]"
-        print >> poutf, "set arrow from 0.0," + str(E_fermi_rel) + " to 1.0," + str(E_fermi_rel) + " nohead"
+        if E_fermi_rel != None:
+            print >> poutf, "set arrow from 0.0," + str(E_fermi_rel) + " to 1.0," + str(E_fermi_rel) + " nohead"
 
         # if symmetry points are specified, use them to label x axis
         if len(symPoints) > 0:
